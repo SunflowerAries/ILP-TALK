@@ -82,6 +82,8 @@ $$
 \end{array}
 $$
 
+<v-click>
+
 对上述形式进一步抽象
 
 $$
@@ -93,6 +95,8 @@ $$
 $$
 \bold{F} = \{ \bold{y} | \bold{x} = \bold{y} \ge \bold{0}, \bold{z} = M\bold{y} + \bold{v} \ge \bold{0}, \red{\bold{y} \ge \bold{0}} \}
 $$
+
+</v-click>
 
 ---
 
@@ -114,7 +118,7 @@ $$
 
 我们将 A 和 C 看作 (n + m) $\times$ n 矩阵 $S = \left[ \begin{array}{c} A \\ C \end{array} \right]$ 的分块矩阵，将 $\left[ \begin{array}{c} \bold{b} \\ \bold{d} \end{array} \right]$ 看作是 (m + n) 阶向量 $\bold{t}$，$\left[ \begin{array}{c} \bold{x} \\ \bold{z} \end{array} \right]$ 看作是 (m + n) 阶向量 $\bold{w}$，要求 $\bold{w} \ge \bold{0}$。
 
-[S $\bold{t}$] 即是后续对偶单纯形算法中的单纯形表
+[S $\bold{t}$] = $\left[ \begin{array}{c} A & \bold{b} \\ C & \bold{d} \end{array} \right]$ 即是后续对偶单纯形算法中的单纯形表
 
 ---
 
@@ -209,18 +213,18 @@ $$
 
 $$
 \left[ \begin{array}{c|c} 
-S_{11} \ S_{12} \ ... \ S_{1n} & t_1 \\ 
-. & . \\ 
-S_{n1} \ S_{n2} \ ... \ S_{nn} & t_n \\ 
-S_{n+1 \ 1} \ S_{n+1 \ 2} \ ... \ S_{n+1 \ n} & t_{n + 1} \\ 
-. & . \\ 
-S_{m+n \ 1} \ S_{m+n \ 2} \ ... \ S_{m+n \ n} & t_{m + n} \\ 
+S_{11} \ \dots \ \dots \ S_{1n} & t_1 \\ 
+\dots \ \dots \ \dots \ \dots \\ 
+S_{n1} \ \dots \ \dots \ S_{nn} & t_n \\ 
+S_{n+1 \ 1} \ \dots \ S_{n+1 \ n} & t_{n + 1} \\ 
+\dots \ \dots \ \dots \ \dots \\ 
+S_{m+n \ 1} \ \dots \ S_{m+n \ n} & t_{m + n} \\ 
 \end{array} \right] = \left[ \begin{array}{c|c} 
 a_{11} \ a_{12} \ ... \ a_{1n} & b_1 \\ 
-. & . \\ 
+\dots \ \dots \ \dots \ \dots \\ 
 a_{n1} \ a_{n2} \ ... \ a_{nn} & b_n \\ 
 c_{11} \ c_{12} \ ... \ c_{1n} & d_1 \\ 
-. & . \\ 
+\dots \ \dots \ \dots \ \dots \\ 
 c_{m1} \ c_{m2} \ ... \ c_{mn} & d_m \\ 
 \end{array} \right]
 $$
@@ -239,35 +243,69 @@ $$
 
 ---
 
-将上式带入其他行有
-
 $$
 \begin{array}{c}
 w_m & = \sum_{k}S_{mk}y_k + t_m = \sum_{k \ne j}S_{mk}y_k + S_{mj}y_j + t_m \\
 & = \sum_{k \ne j}S_{mk}y_k + S_{mj}(\frac{w_i}{S_{ij}} - \sum_{k \ne j}\frac{S_{ik}}{S_{ij}}y_k - \frac{t_i}{S_{ij}}) + t_m \\
-& = \sum_{k \ne j}(S_{mk} - \frac{S_{ik}}{S_{ij}})y_k + \frac{S_{mj}}{S_{ij}}w_i + t_m - \frac{t_i}{S_{ij}}S_{mj}
+& = \sum_{k \ne j}(S_{mk} - \frac{S_{ik}}{S_{ij}}S_{mj})y_k + \frac{S_{mj}}{S_{ij}}w_i + t_m - \frac{t_i}{S_{ij}}S_{mj}
+\end{array}
+$$
+
+$$
+\begin{array}{c}
+w_i & = \sum_{k \ne j}(S_{ik} - \frac{S_{ik}}{S_{ij}}S_{ij})y_k + \frac{S_{ij}}{S_{ij}}w_i + t_i - \frac{t_i}{S_{ij}}S_{ij} = w_i
 \end{array}
 $$
 
 $$
 \left[ \begin{array}{c} w_1 \\ . \\ . \\ . \\ w_{m + n} \end{array} \right] = \left[ \begin{array}{c} 
-S_{11} \ S_{12} \ ... \ S_{1n} \\ 
-. \\ 
-. \\
-S_{i1} \ S_{i2} \ ... \ S_{in} \\
-. \\ 
-S_{m+n \ 1} \ S_{m+n \ 2} \ ... \ S_{m+n \ n} \\ 
+S_{11} \ \dots \ \dots \ S_{1j} \ \dots \ \dots \ S_{1n} \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \\ 
+S_{i1} \ \dots \ \dots \ S_{ij} \ \dots \ \dots \ S_{in} \\
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \\ 
+S_{m+n \ 1} \ \dots \ S_{m+n \ j} \ \dots \ S_{m+n \ n} \\ 
 \end{array} \right]
 \left[ \begin{array}{c} y_1 \\ . \\ y_j \\ . \\ . \\ y_n \end{array} \right] + \left[ \begin{array}{c} t_1 \\ . \\ . \\ t_i \\ . \\ t_{m + n} \end{array} \right] \xrightarrow[\text{$y_j$ leaves}]{\text{$w_i$ enters}} \\
 \left[ \begin{array}{c} 
-S_{11} \ S_{12} \ ... \ S_{1n} \\ 
-. \\ 
-. \\
-. \\ 
-S_{m+n \ 1} \ S_{m+n \ 2} \ ... \ S_{m+n \ n} \\ 
+S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \\ 
+0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ 0 \\
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots  \\ 
+S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} \\ 
 \end{array} \right]
-\left[ \begin{array}{c} y_1 \\ . \\ . \\ . \\ y_n \end{array} \right] + \left[ \begin{array}{c} t_1 \\ . \\ . \\ . \\ t_{m + n} \end{array} \right]
+\left[ \begin{array}{c} y_1 \\ . \\ \red{w_i} \\ . \\ . \\ y_n \end{array} \right] + \left[ \begin{array}{c} t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ . \\ . \\ 0 \\ . \\ t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \end{array} \right]
+$$
 
+<arrow v-click="1" x1="730" y1="420" x2="705" y2="435" color="red" width="1.5" arrowSize="1" />
+
+<p v-after class="red absolute bottom-28 right-50 transform" style="color: red">y* > 0</p>
+
+---
+
+因为 $S_{ij}$ 为正数，所以 $[\frac{S_{1j}}{S_{ij}}, \dots, 1, \dots, \frac{S_{nj}}{S_{ij}}]^T$ 仍然是 lexico-positive 的
+
+要使 $[S_{1k} - \frac{S_{ik}}{S_{ij}}S_{1j}, \dots, 0, \dots, S_{m + n \ k} - \frac{S_{ik}}{S_{ij}}S_{m + n \ j}]^T$ 是 lexico-positive，需要 $[\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$ 是 lexico-minimal 的。
+
+$\left[ \begin{array}{c} 3 \\ 2 \\ 2 \end{array} \right] \ll \left[ \begin{array}{c} 4 \\ 4 \\ 4 \end{array} \right], \left[ \begin{array}{c} 3/2 \\ 2/2 \\ 2/2 \end{array} \right] \gg \left[ \begin{array}{c} 4/4 \\ 4/4 \\ 4/4 \end{array} \right]$
+
+证明：
+
+1) $S_{ik} < 0$，$S_{mk}' = S_{mk} - \frac{S_{ik}}{S_{ij}}S_{mj} = S_{mk} + \frac{|S_{ik}|}{|S_{ij}|}S_{mj}$，即一个 lexico-positive 的列向量加上另一个 lexico-positive 的列向量，因此新的列向量同样也是 lexico-positive。
+
+2) $S_{ik} = 0$，列向量不变。
+
+3) $S_{ik} > 0$，因为 $[\frac{S_{1k}}{S_{ik}},\dots,\frac{S_{m+n \ k}}{S_{ik}}]^T \gg [\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$，考察第 k 列向量的第一个非零元素 $S_{ak}$ 满足 $\frac{S_{ak}}{S_{ik}} > \frac{S_{aj}}{S_{ij}}$， $S_{ak}' = S_{ak} - \frac{S_{ik}}{S_{ij}}S_{aj} = S_{ak} - \frac{S_{ik}}{S_{ij}}S_{aj} = \frac{S_{ak}S_{ij} - S_{ik}S_{aj}}{S_{ij}} > 0$，列向量仍然是 lexico-positive。
+
+---
+
+<br>
+
+再来看 $\bold{t}$，$\bold{t}' = \bold{t} - \frac{t_i}{S_{ij}}S_{.j}$，$t_i < 0, S_{ij} > 0$，$S_{.j}$ 是 lexico-positive 的，因此 $\bold{t}$ 字典序增加。
+
+$$
+\left[ \begin{array}{c} t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ . \\ . \\ 0 \\ . \\ t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \end{array} \right] \gg \left[ \begin{array}{c} t_1 \\ . \\ . \\ t_i \\ . \\ t_{m + n} \end{array} \right]
 $$
 
 ---
