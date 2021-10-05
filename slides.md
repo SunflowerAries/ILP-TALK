@@ -243,6 +243,12 @@ $$
 
 ---
 
+<v-click>
+
+<p v-after class="red absolute top-20 left-20 transform" style="color: red">(i,j)-pivot</p>
+
+</v-click>
+
 $$
 \begin{array}{c}
 w_m & = \sum_{k}S_{mk}y_k + t_m = \sum_{k \ne j}S_{mk}y_k + S_{mj}y_j + t_m \\
@@ -284,6 +290,8 @@ $$
 
 ---
 
+### 证明 S 的列向量在 pivot 操作后仍保持 lexico-positive 性质
+
 因为 $S_{ij}$ 为正数，所以 $[\frac{S_{1j}}{S_{ij}}, \dots, 1, \dots, \frac{S_{nj}}{S_{ij}}]^T$ 仍然是 lexico-positive 的
 
 要使 $[S_{1k} - \frac{S_{ik}}{S_{ij}}S_{1j}, \dots, 0, \dots, S_{m + n \ k} - \frac{S_{ik}}{S_{ij}}S_{m + n \ j}]^T$ 是 lexico-positive，需要 $[\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$ 是 lexico-minimal 的。
@@ -297,6 +305,116 @@ $\left[ \begin{array}{c} 3 \\ 2 \\ 2 \end{array} \right] \ll \left[ \begin{array
 2) $S_{ik} = 0$，列向量不变。
 
 3) $S_{ik} > 0$，因为 $[\frac{S_{1k}}{S_{ik}},\dots,\frac{S_{m+n \ k}}{S_{ik}}]^T \gg [\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$，考察第 k 列向量的第一个非零元素 $S_{ak}$ 满足 $\frac{S_{ak}}{S_{ik}} > \frac{S_{aj}}{S_{ij}}$， $S_{ak}' = S_{ak} - \frac{S_{ik}}{S_{ij}}S_{aj} = S_{ak} - \frac{S_{ik}}{S_{ij}}S_{aj} = \frac{S_{ak}S_{ij} - S_{ik}S_{aj}}{S_{ij}} > 0$，列向量仍然是 lexico-positive。
+
+---
+
+求解可行域中字典序最小元素的算法如下：
+
+1) 根据问题约束构建初始的单纯形表
+$$
+[S \ \bold{t}] = \left[ \begin{array}{cc} I_n & \bold{0} \\ M & \bold{v} \end{array} \right]
+$$
+
+2) 取 i 使得 $t_i < 0$， j 使得 $S_{ij} > 0$ 且 $[\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$ 字典序最小，进行 (i,j)-pivot 操作。
+
+3) 如果当前单纯形表中仍存在 $t_i < 0$，重复步骤 2。否则令 $\bold{y} = \bold{0}$，字典序最小的元素 $\bold{x} = \bold{b}$。
+
+---
+
+<br>
+
+接下来证明算法收敛：即针对一个 ILP 问题，通过有限次的 pivot 操作可得到字典序最小的元素，并且次数小于等于 m + n。
+
+假设第一次 pivot 操作是 (i, j)-pivot，即 $t_i < 0$，$S_{ij} > 0$，并且 $[\frac{S_{1j}}{S_{ij}}, \dots, \frac{S_{m + n \ j}}{S_{ij}}]^T$ 是字典序最小的。pivot 操作后 $t_i^* = 0$，$S_{ik}^* = 0(k \ne j)$。
+
+$$
+\left[ \begin{array}{c|c}
+S_{11} \ \dots \ \dots \ S_{1j} \ \dots \ \dots \ S_{1n} & t_1 \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+S_{i1} \ \dots \ \dots \ S_{ij} \ \dots \ \dots \ S_{in} & t_i \\
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+S_{m+n \ 1} \ \dots \ S_{m+n \ j} \ \dots \ S_{m+n \ n} & t_{m + n} \\ 
+\end{array} \right] \xrightarrow[\text{$y_j$ leaves}]{\text{$w_i$ enters}} \\
+\left[ \begin{array}{c|c} 
+S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} & t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ 0 & 0 \\
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} & t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \\ 
+\end{array} \right]
+$$
+
+---
+
+假设第二次 pivot 操作是 (i', j')-pivot，即 $t_{i'} < 0$，$S_{i'j'} > 0$，$[\frac{S_{1j'}}{S_{i'j'}}, \dots, \frac{S_{m + n \ j'}}{S_{i'j'}}]^T$ 是字典序最小的。并且 $i' \ne i$，因为经过第一次 (i, j)-pivot 操作后 $t_i = 0$。
+
+pivot 操作后 $t_{i'}^* = 0$，$S_{i'k}^* = 0(k \ne j')$，$t_i = t_i - \frac{t_{i'}}{S_{i'j'}}S_{ij'}$，若 $j \ne j'$，则 $t_i^* = 0$，同理有 $S_{ik}$ 也不改变。
+
+$$
+\left[ \begin{array}{c|c} 
+S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} & t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ 0 & 0 \\
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} & t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \\ 
+\end{array} \right] \xrightarrow[\text{$y_{j'}$ leaves}]{\text{$w_{i'}$ enters}} \\
+\left[ \begin{array}{c|c} 
+S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} & t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+0 \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots 
+\ \dots \ 0 & 0 \\
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ 0 & 0 \\
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} & t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \\ 
+\end{array} \right]
+$$
+
+<p class="red absolute bottom-60 left-25 transform" style="color: red">第 i 行</p>
+
+<p class="red absolute bottom-25 left-35 transform" style="color: red">第 i' 行</p>
+
+<p class="red absolute bottom-11.5 left-35 transform" style="color: red">第 i 行</p>
+
+<p class="red absolute bottom-11.5 left-74 transform" style="color: red">0</p>
+
+---
+
+若 $j = j'$，则 $t_{i'}^* = 0$，$t_i^* = -\frac{t_{i'}}{S_{i'j}} > 0$。
+
+$$
+\left[ \begin{array}{c|c} 
+S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} & t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ 0 & 0 \\
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} & t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \\ 
+\end{array} \right] \xrightarrow[\text{$y_{j'}$ leaves}]{\text{$w_{i'}$ enters}} \\
+\left[ \begin{array}{c|c} 
+S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} & t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ 
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots 
+\ \dots \ 0 & 0 \\
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+-\frac{S_{i'1}}{S_{i'j}} \ \dots \ \dots \ \dots \ \dots \ \frac{1}{S_{i'j}} \ \dots \ \dots \ \dots \ \dots \ -\frac{S_{i'n}}{S_{i'j}} & -\frac{t_{i'}}{S_{i'j}} \\
+\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
+S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} & t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \\ 
+\end{array} \right]
+$$
+
+<p class="red absolute top-42 left-25 transform" style="color: red">第 i 行</p>
+
+<p class="red absolute bottom-46 left-35 transform" style="color: red">第 i' 行</p>
+
+<p class="red absolute bottom-34 left-35 transform" style="color: red">第 i 行</p>
+
+---
+
+
 
 ---
 
