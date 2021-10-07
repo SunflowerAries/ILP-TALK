@@ -21,7 +21,7 @@ drawings:
   persist: false
 ---
 
-# ILP 问题及其在深度学习编译器中的运用
+# 整数线性规划问题（ILP）及其在深度学习编译器中的运用
 
 汇报人： 罗翔 指导老师： 尚笠教授
 
@@ -40,6 +40,99 @@ The last comment block of each slide will be treated as slide notes. It will be 
 -->
 
 ---
+
+<br>
+
+<style>
+  ul {
+    font-size: 30px;
+  }
+
+  li {
+    font-size: 26px;
+    margin: 15px 0;
+  }
+
+  li.transparent {
+    color: #9ea7b3de
+  }
+</style>
+
+<ul>
+  整数线性规划问题（Integer linear programming）
+  <li>单纯形算法（Simplex method）</li>
+
+
+  <li class="transparent">整数单纯形算法（Simplex method + Gomory cut）</li>
+  
+  <li class="transparent">字典序最小问题（Lexicographical minimum）</li>
+
+  <li class="transparent">整数字典序最小问题（Lexicographical minimum + Gomory cut）</li>
+</ul>
+
+---
+
+<br>
+
+<style>
+  ul {
+    font-size: 30px;
+  }
+
+  li {
+    font-size: 26px;
+    margin: 15px 0;
+  }
+
+  li.transparent {
+    color: #9ea7b3de
+  }
+</style>
+
+<ul>
+  整数线性规划问题（Integer linear programming）
+  <li class="transparent">单纯形算法（Simplex method）</li>
+
+
+  <li>整数单纯形算法（Simplex method + Gomory cut）</li>
+  
+  <li class="transparent">字典序最小问题（Lexicographical minimum）</li>
+
+  <li class="transparent">整数字典序最小问题（Lexicographical minimum + Gomory cut）</li>
+</ul>
+
+---
+
+<br>
+
+<style>
+  ul {
+    font-size: 30px;
+  }
+
+  li {
+    font-size: 26px;
+    margin: 15px 0;
+  }
+
+  li.transparent {
+    color: #9ea7b3de
+  }
+</style>
+
+<ul>
+  整数线性规划问题（Integer linear programming）
+  <li class="transparent">单纯形算法（Simplex method）</li>
+
+
+  <li class="transparent">整数单纯形算法（Simplex method + Gomory cut）</li>
+  
+  <li>字典序最小问题（Lexicographical minimum）</li>
+
+  <li class="transparent">整数字典序最小问题（Lexicographical minimum + Gomory cut）</li>
+</ul>
+
+---
 layout: two-cols
 ---
 
@@ -47,7 +140,7 @@ layout: two-cols
 
 <br>
 
-给定 m $\times$ n 的矩阵 M，m 维的向量 $\bold{v}$
+$R^n$ 上的字典序最小解：给定 m $\times$ n 的矩阵 M，m 维的向量 $\bold{v}$
 
 令 $\bold{F} = \{ \bold{x} | \bold{x} \ge \bold{0}, M\bold{x} + \bold{v} \ge \bold{0}, \bold{x} \in R^n \}$
 
@@ -243,12 +336,6 @@ $$
 
 ---
 
-<v-click>
-
-<p v-after class="red absolute top-20 left-20 transform" style="color: red">(i,j)-pivot</p>
-
-</v-click>
-
 $$
 \begin{array}{c}
 w_m & = \sum_{k}S_{mk}y_k + t_m = \sum_{k \ne j}S_{mk}y_k + S_{mj}y_j + t_m \\
@@ -288,6 +375,12 @@ $$
 
 <p v-after class="red absolute bottom-28 right-50 transform" style="color: red">y* > 0</p>
 
+<v-click>
+
+<p v-after class="red absolute top-20 left-20 transform" style="color: red">(i,j)-pivot</p>
+
+</v-click>
+
 ---
 
 ### 证明 S 的列向量在 pivot 操作后仍保持 lexico-positive 性质
@@ -296,6 +389,7 @@ $$
 
 要使 $[S_{1k} - \frac{S_{ik}}{S_{ij}}S_{1j}, \dots, 0, \dots, S_{m + n \ k} - \frac{S_{ik}}{S_{ij}}S_{m + n \ j}]^T$ 是 lexico-positive，需要 $[\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$ 是 lexico-minimal 的。
 
+假设做 (2, j)-pivot，需要确定 j：
 $\left[ \begin{array}{c} 3 \\ 2 \\ 2 \end{array} \right] \ll \left[ \begin{array}{c} 4 \\ 4 \\ 4 \end{array} \right], \left[ \begin{array}{c} 3/2 \\ 2/2 \\ 2/2 \end{array} \right] \gg \left[ \begin{array}{c} 4/4 \\ 4/4 \\ 4/4 \end{array} \right]$
 
 证明：
@@ -308,123 +402,85 @@ $\left[ \begin{array}{c} 3 \\ 2 \\ 2 \end{array} \right] \ll \left[ \begin{array
 
 ---
 
-求解可行域中字典序最小元素的算法如下：
+<br>
 
-1) 根据问题约束构建初始的单纯形表
+再来看 $\bold{t}$，$\bold{t}' = \bold{t} - \frac{t_i}{S_{ij}}S_{.j}$，$t_i < 0, S_{ij} > 0$，$S_{.j}$ 是 lexico-positive 的，因此 $S_{1j} \ge 0$，则 $t_1' = t_1 - \frac{t_i}{S_{ij}}S_{1j}$，$t_1$ 单调递增。
+
+回顾问题：
+
+$$
+S\bold{y} + \bold{t} = \bold{w} \ge \bold{0}
+$$
+
+若问题的可行域非空，则有字典序最小的解 $\bold{u} = [u_1, \dots, u_n]^T$，
+
+$$
+\sum_{j} S_{1j}y_{j} + t_1 \ge u_1 \ge t_1
+$$
+
+<v-click>
+
+算法收敛么？
+
+</v-click>
+
+<v-click>
+
+根据现有条件无法保证：当前算法是在 $R^n$ 上的，每次 pivot 操作后 $t_1$ 的增量 $\frac{|t_i|}{S_{ij}}S_{1j}$ 无法用来作为度量算法的进程，e.g. $\frac{1}{2}, \frac{1}{4}, \frac{1}{8}, \frac{1}{16}, \dots$
+
+</v-click>
+
+<v-click>
+
+但是当我们处理 ILP 问题的时候，即算法是在 $Z^n$ 上时，每次 pivot 操作后 $t_1$ 的增量可以用来度量算法的进程，则 $Z^n$ 上的算法一定收敛。
+
+</v-click>
+
+---
+
+求解 $R^n$ 上的可行域中字典序最小元素的算法如下：
+
+- 根据问题约束构建初始的单纯形表
 $$
 [S \ \bold{t}] = \left[ \begin{array}{cc} I_n & \bold{0} \\ M & \bold{v} \end{array} \right]
 $$
 
-2) 取 i 使得 $t_i < 0$， j 使得 $S_{ij} > 0$ 且 $[\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$ 字典序最小，进行 (i,j)-pivot 操作。
+- 取 i 使得 $t_i < 0$，如果 $\forall i, t_i \ge 0$ 进入步骤 3
 
-3) 如果当前单纯形表中仍存在 $t_i < 0$，重复步骤 2。否则令 $\bold{y} = \bold{0}$，字典序最小的元素 $\bold{x} = \bold{b}$。
+  - 取 j 使得 $S_{ij} > 0$ 且 $[\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$ 字典序最小，进行 (i,j)-pivot 操作。如果 $\forall j, S_{ij} \le 0$，则有 $\sum_{j}S_{ij}y_{j} + t_i = w_i < 0$，不满足约束，原可行域为空。
 
----
-
-<br>
-
-接下来证明算法收敛：即针对一个 ILP 问题，通过有限次的 pivot 操作可得到字典序最小的元素，并且次数小于等于 m + n。
-
-假设第一次 pivot 操作是 (i, j)-pivot，即 $t_i < 0$，$S_{ij} > 0$，并且 $[\frac{S_{1j}}{S_{ij}}, \dots, \frac{S_{m + n \ j}}{S_{ij}}]^T$ 是字典序最小的。pivot 操作后 $t_i^* = 0$，$S_{ik}^* = 0(k \ne j)$。
-
-$$
-\left[ \begin{array}{c|c}
-S_{11} \ \dots \ \dots \ S_{1j} \ \dots \ \dots \ S_{1n} & t_1 \\ 
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-S_{i1} \ \dots \ \dots \ S_{ij} \ \dots \ \dots \ S_{in} & t_i \\
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-S_{m+n \ 1} \ \dots \ S_{m+n \ j} \ \dots \ S_{m+n \ n} & t_{m + n} \\ 
-\end{array} \right] \xrightarrow[\text{$y_j$ leaves}]{\text{$w_i$ enters}} \\
-\left[ \begin{array}{c|c} 
-S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} & t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ 
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ 0 & 0 \\
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} & t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \\ 
-\end{array} \right]
-$$
-
----
-
-假设第二次 pivot 操作是 (i', j')-pivot，即 $t_{i'} < 0$，$S_{i'j'} > 0$，$[\frac{S_{1j'}}{S_{i'j'}}, \dots, \frac{S_{m + n \ j'}}{S_{i'j'}}]^T$ 是字典序最小的。并且 $i' \ne i$，因为经过第一次 (i, j)-pivot 操作后 $t_i = 0$。
-
-pivot 操作后 $t_{i'}^* = 0$，$S_{i'k}^* = 0(k \ne j')$，$t_i = t_i - \frac{t_{i'}}{S_{i'j'}}S_{ij'}$，若 $j \ne j'$，则 $t_i^* = 0$，同理有 $S_{ik}$ 也不改变。
-
-$$
-\left[ \begin{array}{c|c} 
-S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} & t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ 
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ 0 & 0 \\
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} & t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \\ 
-\end{array} \right] \xrightarrow[\text{$y_{j'}$ leaves}]{\text{$w_{i'}$ enters}} \\
-\left[ \begin{array}{c|c} 
-S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} & t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ 
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-0 \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots 
-\ \dots \ 0 & 0 \\
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ 0 & 0 \\
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} & t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \\ 
-\end{array} \right]
-$$
-
-<p class="red absolute bottom-60 left-25 transform" style="color: red">第 i 行</p>
-
-<p class="red absolute bottom-25 left-35 transform" style="color: red">第 i' 行</p>
-
-<p class="red absolute bottom-11.5 left-35 transform" style="color: red">第 i 行</p>
-
-<p class="red absolute bottom-11.5 left-74 transform" style="color: red">0</p>
-
----
-
-若 $j = j'$，则 $t_{i'}^* = 0$，$t_i^* = -\frac{t_{i'}}{S_{i'j}} > 0$。
-
-$$
-\left[ \begin{array}{c|c} 
-S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} & t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ 
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots \ \dots \ 0 & 0 \\
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} & t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \\ 
-\end{array} \right] \xrightarrow[\text{$y_{j'}$ leaves}]{\text{$w_{i'}$ enters}} \\
-\left[ \begin{array}{c|c} 
-S_{11} - \frac{S_{i1}}{S_{ij}}S_{1j} \ \ \dots \ \dots \ \dots \ \frac{S_{1j}}{S_{ij}} \ \dots \ \dots \ \dots \ S_{1n} - \frac{S_{in}}{S_{ij}}S_{1j} & t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ 
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-0 \ \dots \ \dots \ \dots \ \dots \ \dots \ 1 \ \dots \ \dots \ \dots \ \dots 
-\ \dots \ 0 & 0 \\
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
--\frac{S_{i'1}}{S_{i'j}} \ \dots \ \dots \ \dots \ \dots \ \frac{1}{S_{i'j}} \ \dots \ \dots \ \dots \ \dots \ -\frac{S_{i'n}}{S_{i'j}} & -\frac{t_{i'}}{S_{i'j}} \\
-\dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots \ \dots & . \\ 
-S_{m+n \ 1} - \frac{S_{i \ 1}}{S_{ij}}S_{m + n \ j} \ \dots \ \dots \ \frac{S_{m + n \ j}}{S_{ij}} \ \dots \ \dots \ S_{m + n \ n} - \frac{S_{in}}{S_{ij}}S_{m + n \ j} & t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \\ 
-\end{array} \right]
-$$
-
-<p class="red absolute top-42 left-25 transform" style="color: red">第 i 行</p>
-
-<p class="red absolute bottom-46 left-35 transform" style="color: red">第 i' 行</p>
-
-<p class="red absolute bottom-34 left-35 transform" style="color: red">第 i 行</p>
-
----
-
-
+- 如果当前单纯形表中仍存在 $t_i < 0$，重复步骤 2。否则令 $\bold{y} = \bold{0}$，字典序最小的元素 $\bold{x} = \bold{b}$。
 
 ---
 
 <br>
 
-再来看 $\bold{t}$，$\bold{t}' = \bold{t} - \frac{t_i}{S_{ij}}S_{.j}$，$t_i < 0, S_{ij} > 0$，$S_{.j}$ 是 lexico-positive 的，因此 $\bold{t}$ 字典序增加。
+<style>
+  ul {
+    font-size: 30px;
+  }
 
-$$
-\left[ \begin{array}{c} t_1 - \frac{t_i}{S_{ij}}S_{1j} \\ . \\ . \\ 0 \\ . \\ t_{m + n} - \frac{t_i}{S_{ij}}S_{m + n \ j} \end{array} \right] \gg \left[ \begin{array}{c} t_1 \\ . \\ . \\ t_i \\ . \\ t_{m + n} \end{array} \right]
-$$
+  li {
+    font-size: 26px;
+    margin: 15px 0;
+  }
+
+  li.transparent {
+    color: #9ea7b3de
+  }
+</style>
+
+<ul>
+  整数线性规划问题（Integer linear programming）
+  <li class="transparent">单纯形算法（Simplex method）</li>
+
+
+  <li class="transparent">整数单纯形算法（Simplex method + Gomory cut）</li>
+  
+  <li class="transparent">字典序最小问题（Lexicographical minimum）</li>
+
+  <li>整数字典序最小问题（Lexicographical minimum + Gomory cut）</li>
+</ul>
 
 ---
 layout: image-right
