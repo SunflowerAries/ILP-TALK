@@ -483,6 +483,165 @@ $$
 </ul>
 
 ---
+
+# 问题定义
+
+<br>
+
+$Z^n$ 上的字典序最小解：给定 m $\times$ n 的矩阵 M，m 维的向量 $\bold{v}$
+
+令 $\bold{F} = \{ \bold{x} | \bold{x} \in N^n, M\bold{x} + \bold{v} \ge \bold{0} \}$
+
+集合 $\bold{F}$ 为问题的可行域，判定集合 $\bold{F}$ 是否为空，若不为空则求出集合中字典序最小的元素。
+
+不失一般性地，假设 M 和 $\bold{v}$ 中的元素都是整数，则 $M \bold{x} + \bold{v}$ 是整数向量。
+
+因此原可行域抽象成
+
+$$
+\bold{F} = \{ A\bold{y} + \bold{b} | \bold{x} = A\bold{y} + \bold{b} \in N^n, \bold{z} = C\bold{y} + \bold{d} \in N^m, \red{\bold{y} \in N^n} \}
+$$
+
+<br>
+
+---
+
+针对可行域
+$$
+\bold{F} = \{ A\bold{y} + \bold{b} | \bold{x} = A\bold{y} + \bold{b} \in N^n, \bold{z} = C\bold{y} + \bold{d} \in N^m, \red{\bold{y} \in N^n} \}
+$$
+
+如果还是完全照搬上一节的算法，（假设算法收敛）最后得到 $\bold{t} = \left[ \begin{array}{c} \bold{b} \\ \bold{d} \end{array} \right]$ 对应可行域
+
+$$
+\overline{\bold{F}} = \{ A\bold{y} + \bold{b} | \bold{x} = A\bold{y} + \bold{b} \ge \bold{0}, \bold{z} = C\bold{y} + \bold{d} \ge \bold{0}, \red{\bold{y} \ge \bold{0}} \}
+$$
+
+字典序最小值，且无法保证 $\bold{b}$ 是整数。但针对 $\bold{F}$ 的字典序最小值 $\bold{u}$，我们知道 $\bold{u} \in \overline{\bold{F}}$，因此有 $\bold{b} \ll \bold{u}$
+
+<v-click>
+
+怎么处理呢？
+
+</v-click>
+
+<v-click>
+
+通过 Gomory cut 引入一个新的约束，在排除掉 $\bold{b}$ 这样的全局非整数的字典序最小解的同时，保留所有可行的整数解。
+
+</v-click>
+
+---
+
+## Gomory cut
+
+选取第一个不是整数的 $b_i$ 对应的 A 中的行，如果不存在这样的行，则 $\bold{b}$ 是整数向量，且为原可行域的整数字典序最小解。令 D 为 $A_{ij}$ 和 $b_i$ 的最小公分母，若有
+
+$$
+\sum_{j} S_{ij}x_j + t_i \in N
+$$
+
+则
+
+$$
+\sum_{j} (DS_{ij})x_j + (Dt_i) \equiv 0 \mod D
+$$
+
+对上式进行取模运算
+
+$$
+\sum_{j} ((DS_{ij}) \% D)x_j \equiv (-Dt_i) \% D \mod D
+$$
+
+进一步有
+
+$$
+\sum_{j} ((DS_{ij}) \% D)x_j = (-Dt_i) \% D + kD(k \ge 0)
+$$
+
+---
+
+$$
+\sum_{j} ((DS_{ij}) \% D)x_j = (-Dt_i) \% D + kD(k \ge 0)
+$$
+
+根据 $k \ge 0$，可以将上式写成
+
+$$
+\sum_{j} ((DS_{ij}) \% D)x_j - (-Dt_i) \% D \ge 0
+$$
+
+并且知道
+
+$$
+\sum_{j} \frac{((DS_{ij}) \% D)}{D}x_j - \frac{(-Dt_i) \% D}{D} = k
+$$
+
+是一个非负整数，因此可以加入
+
+$$
+\sum_{j} \frac{((DS_{ij}) \% D)}{D}x_j - \frac{(-Dt_i) \% D}{D} \in N
+$$
+
+作为 cut
+
+---
+
+针对新的一行约束
+
+$$
+\sum_{j} \frac{((DS_{ij}) \% D)}{D}x_j - \frac{(-Dt_i) \% D}{D} \in N
+$$
+
+其常数项为负，可以进一步 pivot。
+
+<v-click>
+
+我们根据
+
+$$
+\sum_{j} S_{ij}x_j + t_i \in N
+$$
+
+推导出约束将非整数的字典序最小解排除在外，但原可行域的整数可行解都保留。继续 pivot 可能发现原可行域为空，即原问题无整数字典序最小解，或者不断加入 Gomory cut 最后得到一个整数解，通过类似上一节的证明证得是整数字典序最小解。
+
+</v-click>
+
+---
+
+### 算法收敛性
+
+有原问题
+$$
+\bold{F} = \{ \bold{x} | \bold{x} \in N^n, M\bold{x} + \bold{v} \in N^n \}
+$$
+
+令 $\bold{F}_n$ 为原问题加入 n 个 cut 后的可行域
+
+$$
+\bold{F}_n = \{ A^{(n)}\bold{y} + \bold{b}^{(n)} | \bold{x} = A^{(n)}\bold{y} + \bold{b}^{(n)} \in N^n, \bold{z} = C^{(n)}\bold{y} + \bold{d}^{(n)} \in N^m, \red{\bold{y} \in N^n} \}
+$$
+
+令 $\bold{F}_n^*$ 为加入第 n 个 cut 并且 pivot 之后的可行域表示形式。
+
+---
+
+对于新加入的一个 cut
+
+$$
+\sum_{j} \frac{((DS_{ij}) \% D)}{D}x_j - \frac{(-Dt_i) \% D}{D} \in N
+$$
+
+令 $\sigma(n)$ 为新加入的第 n 个 cut 对应的约束的行号，则第 n 个 cut 的常数项为 $-\frac{(-D^{(n)}b_{\sigma(n)}^{(n)}) \% D^{(n)}}{D^{(n)}}$，进行 pivot 时，其进行 pivot 操作时对应的 $S_{ij}$ 为 $\frac{(D^{(n)}A_{\sigma(n)j}^{(n)}) \% D^{(n)}}{D^{(n)}}$
+
+则有
+
+$$
+b_{\sigma(n)}^{'(n)} = b_{\sigma(n)}^{(n)} + \frac{(-D^{(n)}b_{\sigma(n)}^{(n)}) \% D^{(n)}}{D^{(n)}} \frac{D^{(n)}}{(D^{(n)}A_{\sigma(n)j}^{(n)}) \% D^{(n)}} A_{\sigma(n)j}^{(n)}
+$$
+
+---
+
 layout: image-right
 image: https://source.unsplash.com/collection/94734566/1920x1080
 ---
