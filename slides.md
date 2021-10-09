@@ -511,13 +511,13 @@ $$
 \bold{F} = \{ A\bold{y} + \bold{b} | \bold{x} = A\bold{y} + \bold{b} \in N^n, \bold{z} = C\bold{y} + \bold{d} \in N^m, \red{\bold{y} \in N^n} \}
 $$
 
-如果还是完全照搬上一节的算法，（假设算法收敛）最后得到 $\bold{t} = \left[ \begin{array}{c} \bold{b} \\ \bold{d} \end{array} \right]$ 对应可行域
+如果还是完全照搬上一节的算法，（算法收敛后）得到 $\bold{t} = \left[ \begin{array}{c} \bold{b} \\ \bold{d} \end{array} \right]$ 是可行域
 
 $$
 \overline{\bold{F}} = \{ A\bold{y} + \bold{b} | \bold{x} = A\bold{y} + \bold{b} \ge \bold{0}, \bold{z} = C\bold{y} + \bold{d} \ge \bold{0}, \red{\bold{y} \ge \bold{0}} \}
 $$
 
-字典序最小值，且无法保证 $\bold{b}$ 是整数。但针对 $\bold{F}$ 的字典序最小值 $\bold{u}$，我们知道 $\bold{u} \in \overline{\bold{F}}$，因此有 $\bold{b} \ll \bold{u}$
+字典序最小值，且无法保证 $\bold{b}$ 是整数。对于 $\bold{F}$ 的字典序最小值 $\bold{u}$，我们知道 $\bold{u} \in \overline{\bold{F}}$，因此有 $\bold{b} \ll \bold{u}$
 
 <v-click>
 
@@ -538,59 +538,59 @@ $$
 选取第一个不是整数的 $b_i$ 对应的 A 中的行，如果不存在这样的行，则 $\bold{b}$ 是整数向量，且为原可行域的整数字典序最小解。令 D 为 $A_{ij}$ 和 $b_i$ 的最小公分母，若有
 
 $$
-\sum_{j} S_{ij}x_j + t_i \in N
+\sum_{j} S_{ij}y_j + t_i \in N
 $$
 
 则
 
 $$
-\sum_{j} (DS_{ij})x_j + (Dt_i) \equiv 0 \mod D
+\sum_{j} (DS_{ij})y_j + (Dt_i) \equiv 0 \mod D
 $$
 
 对上式进行取模运算
 
 $$
-\sum_{j} ((DS_{ij}) \% D)x_j \equiv (-Dt_i) \% D \mod D
+\sum_{j} ((DS_{ij}) \% D)y_j \equiv (-Dt_i) \% D \mod D
 $$
 
 进一步有
 
 $$
-\sum_{j} ((DS_{ij}) \% D)x_j = (-Dt_i) \% D + kD(k \ge 0)
+\sum_{j} ((DS_{ij}) \% D)y_j = (-Dt_i) \% D + kD(k \ge 0)
 $$
 
 ---
 
 $$
-\sum_{j} ((DS_{ij}) \% D)x_j = (-Dt_i) \% D + kD(k \ge 0)
+\sum_{j} ((DS_{ij}) \% D)y_j = (-Dt_i) \% D + kD(k \ge 0)
 $$
 
 根据 $k \ge 0$，可以将上式写成
 
 $$
-\sum_{j} ((DS_{ij}) \% D)x_j - (-Dt_i) \% D \ge 0
+\sum_{j} ((DS_{ij}) \% D)y_j - (-Dt_i) \% D \ge 0
 $$
 
 并且知道
 
 $$
-\sum_{j} \frac{((DS_{ij}) \% D)}{D}x_j - \frac{(-Dt_i) \% D}{D} = k
+\sum_{j} \frac{((DS_{ij}) \% D)}{D}y_j - \frac{(-Dt_i) \% D}{D} = k
 $$
 
 是一个非负整数，因此可以加入
 
 $$
-\sum_{j} \frac{((DS_{ij}) \% D)}{D}x_j - \frac{(-Dt_i) \% D}{D} \in N
+\sum_{j} \frac{((DS_{ij}) \% D)}{D}y_j - \frac{(-Dt_i) \% D}{D} \in N
 $$
 
 作为 cut
 
 ---
 
-针对新的一行约束
+针对新的约束
 
 $$
-\sum_{j} \frac{((DS_{ij}) \% D)}{D}x_j - \frac{(-Dt_i) \% D}{D} \in N
+\sum_{j} \frac{((DS_{ij}) \% D)}{D}y_j - \frac{(-Dt_i) \% D}{D} \in N
 $$
 
 其常数项为负，可以进一步 pivot。
@@ -600,7 +600,7 @@ $$
 我们根据
 
 $$
-\sum_{j} S_{ij}x_j + t_i \in N
+\sum_{j} S_{ij}y_j + t_i \in N
 $$
 
 推导出约束将非整数的字典序最小解排除在外，但原可行域的整数可行解都保留。继续 pivot 可能发现原可行域为空，即原问题无整数字典序最小解，或者不断加入 Gomory cut 最后得到一个整数解，通过类似上一节的证明证得是整数字典序最小解。
@@ -611,7 +611,7 @@ $$
 
 ### 算法收敛性
 
-有原问题
+有原可行域
 $$
 \bold{F} = \{ \bold{x} | \bold{x} \in N^n, M\bold{x} + \bold{v} \in N^n \}
 $$
@@ -629,7 +629,7 @@ $$
 对于新加入的一个 cut
 
 $$
-\sum_{j} \frac{((DS_{ij}) \% D)}{D}x_j - \frac{(-Dt_i) \% D}{D} \in N
+\sum_{j} \frac{((DS_{ij}) \% D)}{D}y_j - \frac{(-Dt_i) \% D}{D} \in N
 $$
 
 令 $\sigma(n)$ 为新加入的第 n 个 cut 对应的约束的行号，则第 n 个 cut 的常数项为 $-\frac{(-D^{(n)}b_{\sigma(n)}^{(n)}) \% D^{(n)}}{D^{(n)}}$，进行 pivot 时，其进行 pivot 操作时对应的 $S_{ij}$ 为 $\frac{(D^{(n)}A_{\sigma(n)j}^{(n)}) \% D^{(n)}}{D^{(n)}}$
@@ -642,6 +642,97 @@ $$
 
 ---
 
+$$
+b_{\sigma(n)}^{'(n)} = b_{\sigma(n)}^{(n)} + \frac{(-D^{(n)}b_{\sigma(n)}^{(n)}) \% D^{(n)}}{D^{(n)}} \frac{D^{(n)}}{(D^{(n)}A_{\sigma(n)j}^{(n)}) \% D^{(n)}} A_{\sigma(n)j}^{(n)}
+$$
+
+已知 $b_{\sigma(n)}^{(n)}$ 和 $A_{\sigma(n)j}^{(n)}$ 为正数，且有
+
+$$
+(D^{(n)}A_{\sigma(n)j}^{(n)}) \% D^{(n)} \le D^{(n)}A_{\sigma(n)j}^{(n)}
+$$
+
+可得
+
+$$
+b_{\sigma(n)}^{'(n)} \ge b_{\sigma(n)}^{(n)} + \frac{(-D^{(n)}b_{\sigma(n)}^{(n)}) \% D^{(n)}}{D^{(n)}} = \frac{b_{\sigma(n)}^{(n)}D^{(n)} + (-D^{(n)}b_{\sigma(n)}^{(n)}) \% D^{(n)}}{D^{(n)}}
+$$
+
+令 $b_{\sigma(n)}^{(n)} = q(n) - \frac{r(n)}{D^{(n)}}$，$q(n)$ 和 $r(n)$ 都是整数，且 $0 \le r(n) < D^{(n)}$，将 $b_{\sigma(n)}^{(n)}$ 带入上式有
+
+$$
+b_{\sigma(n)}^{'(n)} \ge q(n) > b_{\sigma(n)}^{(n)}
+$$
+
+因为 $\sigma(n)$ 的选取满足 $b_{\sigma(n)}^{(n)}$ 非整数，由上式可知，每次由 $\sigma(n)$-行获得新的 cut 并进行 pivot 操作后，$b_{\sigma(n)}^{'(n)}$ 和 $b_{\sigma(n)}^{(n)}$ 间必定会有一个整数 $\{b_{\sigma(n)}^{(n)}\}$
+
+---
+
+现在考虑 $b_1$ 所在的第一行，假设当前引入的 cut 不对应第一行，则 $b_1$ 为整数。
+- 令 j 为下一个 pivot 操作对应的列，如果 $S_{1j} = 0$，则 $b_1$ pivot 过程中不变。
+- 否则 $S_{1j} > 0$，$b_1$ 增加。
+  - 如果增加的部分是整数，那么 $b_1$ 至少增加了 1。
+  - 否则下一个 cut 的就会用到第一行，$b_1$ 还是会超过 $b_1 + 1$
+
+我们定义一类 cut 为 1-cut，满足：
+
+- 选取第一行来生成新的 cut
+- 当前 cut 的下一个 cut 做 pivot 时，$S_{1j} > 0$，j 是做 pivot 操作时对应的列号
+
+假设第 n 个引入的 cut 是 1-cut，则 $[b_1^{(n)}, b_1^{(n+1)}]$ 区间内至少有一个整数，$[b_1^{(i)}, b_1^{(i+1)}]$ 区间内的这些整数构成了一个严格单调递增的序列，假设前 n 个 cut 中有 $K_n$ 个 1-cut，分别为 $i_1, \dots, i_{K_n}$，则有 $1 \le i_1 < i_2 < \dots < i_{K_n} \le n$
+
+---
+
+原可行域
+$$
+\bold{F} = \{ \bold{x} | \bold{x} \in N^n, M\bold{x} + \bold{v} \in N^n \}
+$$
+
+$\bold{F}_n$ 为原问题加入 n 个 cut 后的可行域
+
+$$
+\bold{F}_n = \{ A^{(n)}\bold{y} + \bold{b}^{(n)} | \bold{x} = A^{(n)}\bold{y} + \bold{b}^{(n)} \in N^n, \bold{z} = C^{(n)}\bold{y} + \bold{d}^{(n)} \in N^m, \red{\bold{y} \in N^n} \}
+$$
+
+已知 $\bold{F}$ 的字典序最小解为 $\bold{u}$ 并且 $\bold{u} \in F_n$，因此存在 $\bold{y}$
+
+$$
+\bold{u} = A^{(n)}\bold{y} + \bold{b}^{(n)}, \bold{y} \ge \bold{0}
+$$
+
+因为 $A^{(n)}$ 是 lexico-positive，有 $\bold{b}^{(n)} \ll \bold{u}$，并且 $\bold{b}_1^{(n)} \le \bold{u}_1$，可知 1-cut 的数目是有限的，因此
+
+$$
+\exists N_1 \text{, s.t.} \forall n \ge N_1, b_1^{(n)} = b_1^{(N_1)}
+$$
+
+并且 $b_1^{(N_1)}$ 是整数。因此对于 $N_1$ 之后的 cut，pivot 只会在 $S_{1j} = 0$ 的列上进行。
+
+---
+
+对于第 i 行， $J_i^+$（$J_i^0$， $J_i^-$）对应列号 j 的集合满足 $S_{ij} > 0$（$S_{ij} = 0$，$S_{ij} < 0$），因此有
+
+$$
+\forall j \in J_1^+: 0 \le y_j \le  \frac{\bold{u}_1 - \bold{b}_1^{(N_1)}}{A_{1j}^{(N_1)}}
+$$
+
+并且对于 $N_1$ 之后的 cut，上式始终成立，因为后续的 pivot 只在 $S_{1j} = 0$ 的列上进行，因此第一行 $S_{1j}$ 后续不会变化。
+
+考察第二行，为了保证 S 的所有列向量均是 lexico-positive，可有 $\forall j \in J_1^0: A_{2j}^{(N_1)} \ge 0$，因此 $J_2^- \subseteq J_1^+$
+
+$$
+\bold{b}_2^{(N_1)} = \bold{u}_2 - \sum_{j} A_{2j}^{(N_1)}y_j \le \bold{u}_2 + \sum_{j \in J_2^-}(-A_{2j}^{(N_1)})y_j \le \bold{u}_2 + \sum_{j \in J_2^-}(-A_{2j}^{(N_1)})\frac{\bold{u}_1 - \bold{b}_1^{(N_1)}}{A_{1j}^{(N_1)}}
+$$
+
+因此 2-cut 这一类的 cut 数量也是有限的，参照上述流程可得
+
+$$
+\exists N_2 \text{, s.t.} \forall n \ge N_2, b_2^{(n)} = b_2^{(N_2)}
+$$
+
+且 $b_2^{(N_2)}$ 为整数，依次得到 $N_1, N_2, \dots, N_n$ 用以刻画 n-cut 的数目，最终得到 $\bold{b}$ 为整数向量，算法结束。
+
+---
 layout: image-right
 image: https://source.unsplash.com/collection/94734566/1920x1080
 ---
