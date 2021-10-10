@@ -418,21 +418,40 @@ $$
 \sum_{j} S_{1j}y_{j} + t_1 \ge u_1 \ge t_1
 $$
 
+---
+
+### 算法收敛性
+
 <v-click>
 
-算法收敛么？
+面对原可行域
+$$
+\left[ \begin{array}{c} I_n \\ M \end{array} \right] \bold{y} + 
+\left[ \begin{array}{c} \bold{0} \\ \bold{v} \end{array} \right]
+= \left[ \begin{array}{c} \bold{x} \\ \bold{z} \end{array} \right]
+$$
+到底做了什么？
 
 </v-click>
 
 <v-click>
 
-根据现有条件无法保证：当前算法是在 $R^n$ 上的，每次 pivot 操作后 $t_1$ 的增量 $\frac{|t_i|}{S_{ij}}S_{1j}$ 无法用来作为度量算法的进程，e.g. $\frac{1}{2}, \frac{1}{4}, \frac{1}{8}, \frac{1}{16}, \dots$
+对
+$$
+w_i = \sum_{k}S_{ik}y_k + t_i = \sum_{k \ne j}S_{ik}y_k + S_{ij}y_j + t_i
+$$
+
+进行变换，将 $y_j$ 用 $y_k$($k \ne j$) 和 $w_i$ 表示
+
+$$
+y_j = \frac{w_i}{S_{ij}} - \sum_{k \ne j}\frac{S_{ik}}{S_{ij}}y_k - \frac{t_i}{S_{ij}}
+$$
 
 </v-click>
 
 <v-click>
 
-但是当我们处理 ILP 问题的时候，即算法是在 $Z^n$ 上时，每次 pivot 操作后 $t_1$ 的增量可以用来度量算法的进程，则 $Z^n$ 上的算法一定收敛。
+也即将原本用 $x_1, \dots, x_n$ 表示的 $\bold{w}$，一部分用 $x_1, \dots, x_n$，一部分用 $z_1, \dots, z_m$ 表示，也就是换基。只要基（basic）确定，$[S, t]$ 也确定了，基与 $\bold{t}$ 一一对应。又因为 $\bold{t}$ 单调递增，所以算法进行中每个基只会出现一次，最多有 $C_{m + n}^{n}$ 个基，因此算法收敛。
 
 </v-click>
 
@@ -679,7 +698,11 @@ $$
 - 选取第一行来生成新的 cut
 - 当前 cut 的下一个 cut 做 pivot 时，$S_{1j} > 0$，j 是做 pivot 操作时对应的列号
 
-假设第 n 个引入的 cut 是 1-cut，则 $[b_1^{(n)}, b_1^{(n+1)}]$ 区间内至少有一个整数，$[b_1^{(i)}, b_1^{(i+1)}]$ 区间内的这些整数构成了一个严格单调递增的序列，假设前 n 个 cut 中有 $K_n$ 个 1-cut，分别为 $i_1, \dots, i_{K_n}$，则有 $1 \le i_1 < i_2 < \dots < i_{K_n} \le n$
+假设第 n 个引入的 cut 是 1-cut，则 $[b_1^{(n)}, b_1^{(n+1)}]$ 区间内至少有一个整数，$[b_1^{(i)}, b_1^{(i+1)}]$ 区间内的这些整数构成了一个严格单调递增的序列，假设前 n 个 cut 中有 $K_n$ 个 1-cut，分别为 $i_1, \dots, i_{K_n}$，则有 $1 \le i_1 < i_2 < \dots < i_{K_n} \le n$，则有
+
+$$
+b_1^{(n)} - b_1^{(0)} \ge K_n - 1
+$$
 
 ---
 
@@ -731,6 +754,19 @@ $$
 $$
 
 且 $b_2^{(N_2)}$ 为整数，依次得到 $N_1, N_2, \dots, N_n$ 用以刻画 n-cut 的数目，最终得到 $\bold{b}$ 为整数向量，算法结束。
+
+---
+
+求解 $Z^n$ 上的可行域中字典序最小元素的算法如下：
+
+- 根据问题约束构建初始的单纯形表
+$$
+[S \ \bold{t}] = \left[ \begin{array}{cc} I_n & \bold{0} \\ M & \bold{v} \end{array} \right]
+$$
+
+- 按照 $R^n$ 上求解可行域中字典序最小元素的算法求出（非整数的）字典序最小元素
+
+- 取 i 使得 i 为不满足 $b_i \in N$ 的最小值，如果 $\forall i, b_i \in N$ 则得到整数字典序最小解。根据第 i 行对应的约束加入相应的 Gomory cut，进入步骤 2
 
 ---
 layout: image-right
