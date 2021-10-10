@@ -286,7 +286,7 @@ $$
 
 又有 $[a_{1i}, a_{2i}, ..., a_{ni}]^T, 1 \le i \le n$ 是 lexico-positive，因此 $[a_{1i}\Delta y_i,a_{2i}\Delta y_i,...,a_{ni}\Delta y_i]^T \gg \bold{0}$，
 
-$[a_{1i} + a_{1i}\Delta y_i, a_{2i} + a_{2i}\Delta y_i, ..., a_{ni} + a_{ni}\Delta y_i]^T \gg [a_{1i}, a_{2i}, ..., a_{ni}]^T$，
+$[b_{1} + a_{1i}\Delta y_i, b_{2} + a_{2i}\Delta y_i, ..., b_{n} + a_{ni}\Delta y_i]^T \gg [b_{1}, b_{2}, ..., b_{n}]^T$，
 
 因此 $\bold{b}$ 为 $\bold{F}$ 中字典序最小的元素。
 
@@ -385,7 +385,7 @@ $$
 
 ### 证明 S 的列向量在 pivot 操作后仍保持 lexico-positive 性质
 
-因为 $S_{ij}$ 为正数，所以 $[\frac{S_{1j}}{S_{ij}}, \dots, 1, \dots, \frac{S_{nj}}{S_{ij}}]^T$ 仍然是 lexico-positive 的
+因为 $S_{ij}$ 为正数，所以 $[\frac{S_{1j}}{S_{ij}}, \dots, 1, \dots, \frac{S_{m + n \ j}}{S_{ij}}]^T$ 仍然是 lexico-positive 的
 
 要使 $[S_{1k} - \frac{S_{ik}}{S_{ij}}S_{1j}, \dots, 0, \dots, S_{m + n \ k} - \frac{S_{ik}}{S_{ij}}S_{m + n \ j}]^T$ 是 lexico-positive，需要 $[\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$ 是 lexico-minimal 的。
 
@@ -398,18 +398,18 @@ $\left[ \begin{array}{c} 3 \\ 2 \\ 2 \end{array} \right] \ll \left[ \begin{array
 
 2) $S_{ik} = 0$，列向量不变。
 
-3) $S_{ik} > 0$，因为 $[\frac{S_{1k}}{S_{ik}},\dots,\frac{S_{m+n \ k}}{S_{ik}}]^T \gg [\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$，考察第 k 列向量的第一个非零元素 $S_{ak}$ 满足 $\frac{S_{ak}}{S_{ik}} > \frac{S_{aj}}{S_{ij}}$， $S_{ak}' = S_{ak} - \frac{S_{ik}}{S_{ij}}S_{aj} = S_{ak} - \frac{S_{ik}}{S_{ij}}S_{aj} = \frac{S_{ak}S_{ij} - S_{ik}S_{aj}}{S_{ij}} > 0$，列向量仍然是 lexico-positive。
+3) $S_{ik} > 0$，因为 $[\frac{S_{1k}}{S_{ik}},\dots,\frac{S_{m+n \ k}}{S_{ik}}]^T \gg [\frac{S_{1j}}{S_{ij}},\dots,\frac{S_{m+n \ j}}{S_{ij}}]^T$，考察第 k 列向量中的 $S_{ak}$，是第一个满足 $\frac{S_{ak}}{S_{ik}} > \frac{S_{aj}}{S_{ij}}$ 的元素， $S_{ak}' = S_{ak} - \frac{S_{ik}}{S_{ij}}S_{aj} = S_{ak} - \frac{S_{ik}}{S_{ij}}S_{aj} = \frac{S_{ak}S_{ij} - S_{ik}S_{aj}}{S_{ij}} > 0$，列向量仍然是 lexico-positive。
 
 ---
 
 <br>
 
-再来看 $\bold{t}$，$\bold{t}' = \bold{t} - \frac{t_i}{S_{ij}}S_{.j}$，$t_i < 0, S_{ij} > 0$，$S_{.j}$ 是 lexico-positive 的，因此 $S_{1j} \ge 0$，则 $t_1' = t_1 - \frac{t_i}{S_{ij}}S_{1j}$，$t_1$ 单调递增。
+再来看 $\bold{t}$，$\bold{t}' = \bold{t} - \frac{t_i}{S_{ij}}s_{j}$，因为 $t_i < 0, S_{ij} > 0$，$s_{j}$ 是 lexico-positive 的，因此 $\bold{t}$ 是字典序单调递增。 $S_{1j} \ge 0$，则 $t_1' = t_1 - \frac{t_i}{S_{ij}}S_{1j}$，$t_1$ 单调递增。
 
 回顾问题：
 
 $$
-S\bold{y} + \bold{t} = \bold{w} \ge \bold{0}
+\bold{F} = \{ A\bold{y} + \bold{b} | \bold{x} = A\bold{y} + \bold{b} \ge \bold{0}, \bold{z} = C\bold{y} + \bold{d} \ge \bold{0}, \bold{y} \ge \bold{0} \}
 $$
 
 若问题的可行域非空，则有字典序最小的解 $\bold{u} = [u_1, \dots, u_n]^T$，
@@ -451,7 +451,7 @@ $$
 
 <v-click>
 
-也即将原本用 $x_1, \dots, x_n$ 表示的 $\bold{w}$，一部分用 $x_1, \dots, x_n$，一部分用 $z_1, \dots, z_m$ 表示，也就是换基。只要基（basic）确定，$[S, t]$ 也确定了，基与 $\bold{t}$ 一一对应。又因为 $\bold{t}$ 单调递增，所以算法进行中每个基只会出现一次，最多有 $C_{m + n}^{n}$ 个基，因此算法收敛。
+也即将原本用 $x_1, \dots, x_n$ 表示的 $\bold{w}$，一部分用 $x_1, \dots, x_n$，一部分用 $z_1, \dots, z_m$ 表示，也就是换基。只要基（basic）确定，$[S, t]$ 也确定了，基与 $\bold{t}$ 一一对应。又因为 $\bold{t}$ 单调递增，最多有 $C_{m + n}^{n}$ 个基，因此算法收敛。
 
 </v-click>
 
@@ -554,7 +554,7 @@ $$
 
 ## Gomory cut
 
-选取第一个不是整数的 $b_i$ 对应的 A 中的行，如果不存在这样的行，则 $\bold{b}$ 是整数向量，且为原可行域的整数字典序最小解。令 D 为 $A_{ij}$ 和 $b_i$ 的最小公分母，若有
+选取第一个不是整数的 $b_i$ 对应的 A 中的行，如果不存在这样的行，则 $\bold{b}$ 是整数向量，且为原可行域的整数字典序最小解。令 D 为 $S_{ij}$ 和 $b_i$ 的最小公分母，若有
 
 $$
 \sum_{j} S_{ij}y_j + t_i \in N
@@ -696,7 +696,7 @@ $$
 我们定义一类 cut 为 1-cut，满足：
 
 - 选取第一行来生成新的 cut
-- 当前 cut 的下一个 cut 做 pivot 时，$S_{1j} > 0$，j 是做 pivot 操作时对应的列号
+- 在做插入当前 cut 后的下一个 pivot 时，$S_{1j} > 0$，j 是做 pivot 操作时对应的列号
 
 假设第 n 个引入的 cut 是 1-cut，则 $[b_1^{(n)}, b_1^{(n+1)}]$ 区间内至少有一个整数，$[b_1^{(i)}, b_1^{(i+1)}]$ 区间内的这些整数构成了一个严格单调递增的序列，假设前 n 个 cut 中有 $K_n$ 个 1-cut，分别为 $i_1, \dots, i_{K_n}$，则有 $1 \le i_1 < i_2 < \dots < i_{K_n} \le n$，则有
 
@@ -766,7 +766,7 @@ $$
 
 - 按照 $R^n$ 上求解可行域中字典序最小元素的算法求出（非整数的）字典序最小元素
 
-- 取 i 使得 i 为不满足 $b_i \in N$ 的最小值，如果 $\forall i, b_i \in N$ 则得到整数字典序最小解。根据第 i 行对应的约束加入相应的 Gomory cut，进入步骤 2
+- 取 i 使得 i 为不满足 $b_i \in N$ 的最小值。如果 $\forall i, b_i \in N$ 则得到整数字典序最小解 $\bold{b}$，否则根据第 i 行对应的约束加入相应的 Gomory cut，进入步骤 2
 
 ---
 layout: image-right
