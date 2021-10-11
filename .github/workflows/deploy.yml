@@ -20,7 +20,7 @@ jobs:
           yarn install
       - name: Build application
         run: |
-          yarn build --base /yourreponame/
+          yarn build --base /ILP-TALK/
           cp dist/index.html dist/404.html
       - name: Deploy pages
         uses: crazy-max/ghaction-github-pages@v2.3.0
