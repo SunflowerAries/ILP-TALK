@@ -1,29 +1,19 @@
 name: Deploy pages
-
-on:  push
-
+on: push
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2.1.5
+      - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - uses: actions/cache@v2
-        with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: Install dependencies
-        run: |
-          yarn install
-      - name: Build application
-        run: |
-          yarn build --base /ILP-TALK/
-          cp dist/index.html dist/404.html
+        run: npm install
+      - name: Build
+        run: npm run build -- --base /ILP-TALK/
       - name: Deploy pages
-        uses: crazy-max/ghaction-github-pages@v2.3.0
+        uses: crazy-max/ghaction-github-pages@v2
         with:
           build_dir: dist
         env:
