@@ -59,7 +59,7 @@ The last comment block of each slide will be treated as slide notes. It will be 
 <!--
 因为很多同学对深度学习编译器一点概念都没有，所以首先介绍一下它是什么？
 
-接着介绍多面体模型。多面体模型不是一个新鲜事物，而是编译器一个研究了几十年领域，主要的对象是嵌套循环，通过将嵌套循环映射到抽象的多维约束空间，然后进行仿射变换来实现循环的分块、合并等变换以更好地利用代码的局部性和现代硬件的并行能力。这里主要讲作为深度学习编译器中的一个 pass，当面对一个多层嵌套循环时，多面体模型会做些什么。我们后面会讲他将编译过程中的调度问题（简单一点来讲就是分块问题）表示成了整数线性规划问题。
+接着介绍多面体模型。多面体模型不是一个新鲜事物，而是编译器一个研究了几十年领域，主要处理的对象是嵌套循环，通过将嵌套循环映射到抽象的多维约束空间，然后进行仿射变换来实现对循环的变换以更好地利用代码的局部性和现代硬件的并行能力。这里主要讲作为深度学习编译器中的一个 pass，当面对一个多层嵌套循环时，多面体模型会做些什么。我们后面会讲它会将编译过程中的调度问题（简单一点来讲就是分块问题）表示成了整数线性规划问题。
 
 第三部分就是面对一个整数线性规划问题，如何得到一个最优解。
 -->
@@ -103,17 +103,105 @@ C --> M[...]
 当大家听到深度学习编译器的时候，可能有疑问它和我们平时用到的 Tensorflow、Pytorch 是啥关系。
 
 为什么还需要深度学习编译器呢？大家回想一下，我们平时用 pytorch、tensorflow 写的模型是可以简单配置一下就在服务器的 GPU 上运行的，但是我们都没有写与 GPU 交互的代码，那这部分代码是谁写的呢？答案是 NVIDIA 已经为硬件写好了配套库函数，NVIDIA 推出的 cuDNN（CUDA Deep Neural Network library），cuBLAS（Basic Linear Algebra Subprograms） 这种深度学习库可以直接将常用的功能模块（算子）翻译成经过 cuda 自己的工程师调优过的 cuda 实现，框架在跑这部分代码的时候就直接调用这部分 cuDNN 中的对应代码就可以了。
+-->
 
-但是这种深度学习框架采用的传统的人工优化算子的方式终究是有局限的，它需要工程师根据算子的特性和硬件的特性做专门的优化，也就是每多出一个硬件就需要有工程师把这些库移植到新的硬件上去。那现在已经出了很多新的硬件了，比如 FPGA、TPU、寒武纪、华为的昇腾，这需要很大的工程量。因此这个时候就需要深度学习编译器，它可以利用一些方法在状态空间中针对某一个算子自动找到接近甚至超越人工的优化实现。
+---
+layout: two-cols
+---
+
+<br>
+
+```mermaid {scale: 0.75}
+graph LR
+A[深度学习工具] --> B[深度学习框架]
+A[深度学习工具] --> C[深度学习编译器]
+A[深度学习工具] --> F[...]
+B --> D[Tensorflow]
+B --> E[Pytorch]
+B --> G[...]
+C --> H[TVM]
+C --> L[XLA]
+C --> M[...]
+```
+
+::right::
+
+<br>
+
+深度学习框架：为深度学习开发者提供搭建深度学习模型时常用的功能模块（卷积层、池化层、激活函数等）并进行模型训练与验证。
+
+<Space />
+
+<img src="/library.svg">
+
+<!--
+但是这种深度学习框架采用的传统的人工优化算子的方式终究是有局限的，它需要工程师根据算子的特性和硬件的特性做专门的优化，也就是每多出一个硬件就需要有工程师把这些库移植到新的硬件上去。那现在已经出了很多新的硬件了，比如 FPGA、谷歌的 TPU、寒武纪的 Cambricon、华为的昇腾，这需要很大的工程量。因此这个时候就需要深度学习编译器，它可以利用一些方法在状态空间中针对某一个算子自动找到接近甚至超越人工的优化实现。即使单个算子通过深度学习编译器不能达到最优，但是编译器可以通过将不同算子放在一起来优化，一定可以获得一个全局更优的结果。
+
+用陈天奇的一句话来讲“通过（接近无限）的算力去适配每一个应用场景看到的网络”。
 -->
 
 ---
 
 <img src="/tvm.png"/>
 
+深度学习编译器 TVM 编译流程
+
+- 从前端导入模型到 TVM，TVM 目前支持 Tensorflow、Pytorch、Caffe/Caffe2、PaddlePaddle、MXNet 等框架
+
+- 将导入的模型用 TVM 内部的中间表示（IR）Relay 表示成计算图的形式，进行图优化：算子融合，数据布局重排等。
+
+- 完成 high-level 的优化后，Relay 会通过 FuseOps pass 将原来的计算图划分为一个个子图，然后将子图表示为 Tensor Expression 的形式。TE 提供了一些调度过程（scheduling）中循环优化相关的源语包括分块（tiling）、向量化（vectorization）、并行化（parallelization）、循环展开（unrolling）与合并（fusion）等用以指导 low-level 的优化。
+
+- 用机器学习方法为每一个子图在状态空间中搜索最优的调度方式，例如分块大小、循环展开系数等。
+
+- 获取上一阶段为每一个子图搜索（自动调优）得到的最优调度方式。
+
 <!--
-我们刚刚说深度学习编译器是作为替代写深度学习高性能库的工程师们的一种工具，但深度学习库到底在做什么可能还是不很直观，我这里就拿了一张 TVM 的简化编译流程图
+我们刚刚说深度学习编译器是作为替代写深度学习高性能库的工程师们的一种工具，但深度学习库到底在做什么可能还是不很直观，我这里就拿了一张 TVM 的简化编译流程图。
 -->
+
+---
+
+<img src="/tvm.png"/>
+
+深度学习编译器 TVM 编译流程
+
+- 将每一个基于 TE 表示的子图转换为 Tensor Intermediate Representation (TIR) 形式，在 TIR 上再做一些低层的优化。
+
+- 最后把 TIR 形式转换成目标编译器接受的形式进行编译，例如 LLVM、NVCC（CUDA） 等。
+
+<v-click>
+
+<img src="/tvm-compile.jpeg" style="height:45%">
+
+</v-click>
+
+<!--
+balabala 重复一边，我们以 TVM 为例大致梳理了一下深度学习编译器在干什么，我们可以发现现在整个流程仍然不是自动化的。那么什么是自动化呢？也就是给定一个模型给 TVM，我们不能直接点击 run 来完成整个编译流程，因为在第三步的时候需要我们设置 schedule primitives，那么近期华为发表的 AKG 就是针对这一步引入了多面体模型来完成了 schedule 的自动化。
+-->
+
+---
+
+<br>
+
+<style>
+  ul {
+    font-size: 30px;
+  }
+
+  li {
+    font-size: 26px;
+    margin: 15px 0;
+  }
+
+  li.transparent {
+    color: #9ea7b3de
+  }
+</style>
+
+## 多面体模型（Polyhedral method）
+
+多面体编译技术是指在循环边界约束条件下将语句实例表示成空间多面体,并通过这些多面体上的几何操作来分析和优化程序的编译技术
 
 ---
 
@@ -763,6 +851,13 @@ $$
 
 ---
 
+<style>
+  li {
+    font-size: 15px;
+    margin: 15px 0;
+  }
+</style>
+
 现在考虑 $b_1$ 所在的第一行，假设当前引入的 cut 不对应第一行，则 $b_1$ 为整数。
 - 令 j 为下一个 pivot 操作对应的列，如果 $S_{1j} = 0$，则 $b_1$ pivot 过程中不变。
 - 否则 $S_{1j} > 0$，$b_1$ 增加。
@@ -845,244 +940,29 @@ $$
 - 取 i 使得 i 为不满足 $b_i \in N$ 的最小值。如果 $\forall i, b_i \in N$ 则得到整数字典序最小解 $\bold{b}$，否则根据第 i 行对应的约束加入相应的 Gomory cut，进入步骤 2
 
 ---
-layout: image-right
-image: https://source.unsplash.com/collection/94734566/1920x1080
----
 
-# Code
+# 参考文献
 
-Use code snippets and get the highlighting directly![^1]
+- 【深度学习编译器前沿综述】Mingzhen Li, Yi Liu, Xiaoyan Liu, Qingxiao Sun, Xin You, Hailong Yang, Zhongzhi Luan, Lin Gan, Guangwen Yang, and Depei Qian. The deep learning compiler: A comprehensive survey. IEEE Transactions on Parallel and Distributed Systems, 32(3):708–727, 2020. https://arxiv.org/pdf/2002.03794.pdf
 
-```ts {all|2|1-6|9|all}
-interface User {
-  id: number
-  firstName: string
-  lastName: string
-  role: string
-}
+- U. Bondhugula, M. Baskaran, S. Krishnamoorthy, J. Ramanujam, A. Rountev, and P. Sadayappan. Affine transformations for communication minimal parallelization and locality optimization of arbitrarily-nested loop sequences. Technical Report OSU-CISRC5/07-TR43, The Ohio State University, May 2007. https://www.ece.lsu.edu/jxr/Publications-pdf/tr43-07.pdf
 
-function updateUser(id: number, update: User) {
-  const user = getUser(id)
-  const newUser = {...user, ...update}  
-  saveUser(id, newUser)
-}
-```
+- 【单纯形算法】E. K. P. Chong and S. H. Zak, An Introduction to Optimization. New York: Wiley, 2001.
 
-<arrow v-click="3" x1="400" y1="420" x2="230" y2="330" color="#564" width="3" arrowSize="1" />
+- P. Feautrier. Parametric integer programming. Operationnelle/Operations Research, 22(3):243–268, 1988. http://www.numdam.org/item/RO_1988__22_3_243_0.pdf
 
-[^1]: [Learn More](https://sli.dev/guide/syntax.html#line-highlighting)
+- 赵捷 Polyhedral 编译调度算法：
 
-<style>
-.footnotes-sep {
-  @apply mt-20 opacity-10;
-}
-.footnotes {
-  @apply text-sm opacity-75;
-}
-.footnote-backref {
-  display: none;
-}
-</style>
+  - Pluto算法 https://zhuanlan.zhihu.com/p/199683290
+
+  - Feautrier算法 https://zhuanlan.zhihu.com/p/232070003
+
+  - isl中的调度算法 https://zhuanlan.zhihu.com/p/259311866
 
 ---
 
-# Components
+# 参考文献
 
-<div grid="~ cols-2 gap-4">
-<div>
+- Jie Zhao, Bojie Li, Wang Nie, Zhen Geng, Renwei Zhang, Xiong Gao, Bin Cheng, Chen Wu, Yun Cheng, Zheng Li, Peng Di, Kun Zhang, and Xuefeng Jin. 2021. AKG: automatic kernel generation for neural processing units using polyhedral transformations. In Proceedings of the 42nd ACM SIGPLAN International Conference on Programming Language Design and Implementation (PLDI 2021). Association for Computing Machinery, New York, NY, USA, 1233–1248. DOI:https://doi.org/10.1145/3453483.3454106
 
-You can use Vue components directly inside your slides.
-
-We have provided a few built-in components like `<Tweet/>` and `<Youtube/>` that you can use directly. And adding your custom components is also super easy.
-
-```html
-<Counter :count="10" />
-```
-
-<!-- ./components/Counter.vue -->
-<Counter :count="10" m="t-4" />
-
-Check out [the guides](https://sli.dev/builtin/components.html) for more.
-
-</div>
-<div>
-
-```html
-<Tweet id="1390115482657726468" />
-```
-
-<Tweet id="1390115482657726468" scale="0.65" />
-
-</div>
-</div>
-
-
----
-class: px-20
----
-
-# Themes
-
-Slidev comes with powerful theming support. Themes can provide styles, layouts, components, or even configurations for tools. Switching between themes by just **one edit** in your frontmatter:
-
-<div grid="~ cols-2 gap-2" m="-t-2">
-
-```yaml
----
-theme: default
----
-```
-
-```yaml
----
-theme: seriph
----
-```
-
-<img border="rounded" src="https://github.com/slidevjs/themes/blob/main/screenshots/theme-default/01.png?raw=true">
-
-<img border="rounded" src="https://github.com/slidevjs/themes/blob/main/screenshots/theme-seriph/01.png?raw=true">
-
-</div>
-
-Read more about [How to use a theme](https://sli.dev/themes/use.html) and
-check out the [Awesome Themes Gallery](https://sli.dev/themes/gallery.html).
-
----
-preload: false
----
-
-# Animations
-
-Animations are powered by [@vueuse/motion](https://motion.vueuse.org/).
-
-```html
-<div
-  v-motion
-  :initial="{ x: -80 }"
-  :enter="{ x: 0 }">
-  Slidev
-</div>
-```
-
-<div class="w-60 relative mt-6">
-  <div class="relative w-40 h-40">
-    <img
-      v-motion
-      :initial="{ x: 800, y: -100, scale: 1.5, rotate: -50 }"
-      :enter="final"
-      class="absolute top-0 left-0 right-0 bottom-0"
-      src="https://sli.dev/logo-square.png"
-    />
-    <img
-      v-motion
-      :initial="{ y: 500, x: -100, scale: 2 }"
-      :enter="final"
-      class="absolute top-0 left-0 right-0 bottom-0"
-      src="https://sli.dev/logo-circle.png"
-    />
-    <img
-      v-motion
-      :initial="{ x: 600, y: 400, scale: 2, rotate: 100 }"
-      :enter="final"
-      class="absolute top-0 left-0 right-0 bottom-0"
-      src="https://sli.dev/logo-triangle.png"
-    />
-  </div>
-
-  <div 
-    class="text-5xl absolute top-14 left-40 text-[#2B90B6] -z-1"
-    v-motion
-    :initial="{ x: -80, opacity: 0}"
-    :enter="{ x: 0, opacity: 1, transition: { delay: 2000, duration: 1000 } }">
-    Slidev
-  </div>
-</div>
-
-<!-- vue script setup scripts can be directly used in markdown, and will only affects current page -->
-<script setup lang="ts">
-const final = {
-  x: 0,
-  y: 0,
-  rotate: 0,
-  scale: 1,
-  transition: {
-    type: 'spring',
-    damping: 10,
-    stiffness: 20,
-    mass: 2
-  }
-}
-</script>
-
-<div
-  v-motion
-  :initial="{ x:35, y: 40, opacity: 0}"
-  :enter="{ y: 0, opacity: 1, transition: { delay: 3500 } }">
-
-[Learn More](https://sli.dev/guide/animations.html#motion)
-
-</div>
-
----
-
-# LaTeX
-
-LaTeX is supported out-of-box powered by [KaTeX](https://katex.org/).
-
-<br>
-
-Inline $\sqrt{3x-1}+(1+x)^2$
-
-Block
-$$
-\begin{array}{c}
-
-\nabla \times \vec{\mathbf{B}} -\, \frac1c\, \frac{\partial\vec{\mathbf{E}}}{\partial t} &
-= \frac{4\pi}{c}\vec{\mathbf{j}}    \nabla \cdot \vec{\mathbf{E}} & = 4 \pi \rho \\
-
-\nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t} & = \vec{\mathbf{0}} \\
-
-\nabla \cdot \vec{\mathbf{B}} & = 0
-
-\end{array}
-$$
-
-<br>
-
-[Learn more](https://sli.dev/guide/syntax#latex)
-
----
-
-# Diagrams
-
-You can create diagrams / graphs from textual descriptions, directly in your Markdown.
-
-<div class="grid grid-cols-2 gap-10 pt-4 -mb-6">
-
-```mermaid {scale: 0.9}
-sequenceDiagram
-    Alice->John: Hello John, how are you?
-    Note over Alice,John: A typical interaction
-```
-
-```mermaid {theme: 'neutral', scale: 0.8}
-graph TD
-B[Text] --> C{Decision}
-C -->|One| D[Result 1]
-C -->|Two| E[Result 2]
-```
-
-</div>
-
-[Learn More](https://sli.dev/guide/syntax.html#diagrams)
-
-
----
-layout: center
-class: text-center
----
-
-# Learn More
-
-[Documentations](https://sli.dev) · [GitHub](https://github.com/slidevjs/slidev) · [Showcases](https://sli.dev/showcases.html)
+- 陈天奇 深度学习编译技术的现状和未来 https://zhuanlan.zhihu.com/p/65452090
