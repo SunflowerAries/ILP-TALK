@@ -177,31 +177,295 @@ C --> M[...]
 </v-click>
 
 <!--
-balabala 重复一边，我们以 TVM 为例大致梳理了一下深度学习编译器在干什么，我们可以发现现在整个流程仍然不是自动化的。那么什么是自动化呢？也就是给定一个模型给 TVM，我们不能直接点击 run 来完成整个编译流程，因为在第三步的时候需要我们设置 schedule primitives，那么近期华为发表的 AKG 就是针对这一步引入了多面体模型来完成了 schedule 的自动化。
+balabala 重复一遍，我们以 TVM 为例大致梳理了一下深度学习编译器在干什么，我们可以发现现在整个流程仍然不是自动化的。那么什么是自动化呢？也就是给定一个模型给 TVM，我们不能直接点击 run 来完成整个编译流程，因为在第三步的时候需要我们设置 schedule primitives，那么近期华为发表的 AKG 就是针对这一步引入了多面体模型来完成了 schedule 的自动化。
 -->
 
 ---
 
 <br>
 
-<style>
-  ul {
-    font-size: 30px;
-  }
-
-  li {
-    font-size: 26px;
-    margin: 15px 0;
-  }
-
-  li.transparent {
-    color: #9ea7b3de
-  }
-</style>
-
 ## 多面体模型（Polyhedral method）
 
 多面体编译技术是指在循环边界约束条件下将语句实例表示成空间多面体,并通过这些多面体上的几何操作来分析和优化程序的编译技术
+
+```c
+for (int i = 1; i <= 4; i++) {
+  a[i] = f(i); // S1
+  for (int j = 1; j <= i; j++) {
+    b[i][j] = g(a[i]); // S2
+  }
+}
+```
+
+```
+Domain = {S1(i): 1 <= i <= 4;
+          S2(i, j): 1 <= i <= 4 && 1 <= j <= i}
+Dependence = {S1(i) -> S2(i, j): 1 <= i <= 4 && 
+              1 <= j <= i}
+```
+
+<img src="/example0.png" style="height:45%" class="absolute top-40 right-60">
+
+<!--
+对应多面体表示，横坐标是 j，纵坐标是 i，每一个点对应语句实例。迭代空间（domain），依赖关系
+
+那么我们现在引入多面体模型，将循环抽象成多面体，到底是想做什么呢？
+-->
+
+---
+
+```c
+for (int i = 1; i <= m; i++) {
+  for (int j = 1; j <= n; j++) {
+    a[i][j] = a[i][j] + b[j]; // S1
+  }
+}
+```
+
+<v-click>
+
+```c
+for (int k = 0; k < n / 2; k++) {
+  for (int i = 1; i <= m; i++) {
+    for (int j = 1; j <= 2; j++) {
+      a[i][j] = a[i][j] + b[2 * k + j]; // S1
+    }
+  }
+}
+```
+
+</v-click>
+
+<v-click>
+
+```c
+parfor (int k = 0; k < n / 2; k++) {
+  for (int i = 1; i <= m; i++) {
+    for (int j = 1; j <= 2; j++) {
+      a[i][j] = a[i][j] + b[2 * k + j]; // S1
+    }
+  }
+}
+```
+
+</v-click>
+
+<img src="/example1.png" style="height:45%" class="absolute top-10 right-50">
+
+<v-click>
+
+```c
+for (int i = 1; i <= N; i++) {
+  for (int j = 2; j <= N; j++) {
+    a[i][j] = a[j][i] + a[i][j - 1]; // S1
+  }
+}
+```
+
+<img src="/example2-0.svg" style="height:45%" class="absolute bottom-0 right-50">
+
+
+</v-click>
+
+<!--
+我们想做的是循环分块。分块的目的是为了利用程序的局部性以及现有硬件的并行能力。
+
+局部性：
+时间局部性
+空间局部性
+cache
+-->
+
+---
+
+通过仿射变换改变坐标系，使得我们对变换后的多面体分块时，分块之间不会相互产生依赖，因此我们可以将其看作是一个原子操作。
+
+```c
+for (int i = 1; i <= N; i++) {
+  for (int j = 2; j <= N; j++) {
+    a[i][j] = a[j][i] + a[i][j - 1]; // S1
+  }
+}
+```
+
+<img src="/example2-0.svg" style="height:35%" class="absolute top-25 right-10">
+
+<v-click>
+
+对一个语句 $S_k$ 的一维仿射变换是指
+
+$$
+\phi_{S_k} = [c_1 c_2 \dots c_{m_{S_k}}](\bold{i}) + c_0 \\
+$$
+
+对一个语句 $S_k$ 的多维放射变换是指
+
+$$
+\phi_{S_k} = \left[ \begin{array}{c} c_{11} & c_{12} & \dots & c_{1 \ m_{S_k}} \\ \dots & \dots & \dots & \dots \\ c_{K1} & c_{K2} & \dots & c_{K \ m_{S_k}} \end{array} \right] (\bold{i}) + \left[ \begin{array}{c} c_{10} \\ . \\ c_{K0} \end{array} \right]
+$$
+
+</v-click>
+
+<!--
+仿射变换就是线性组合+常数
+-->
+
+---
+
+合格的仿射变换
+
+对所有依赖组成的集合 $R_e$ 满足：
+
+$$
+\phi_{S_j}(\bold{q}) - \phi_{S_i}(\bold{p}) \ge 0, \langle \bold{p}, \bold{q} \rangle \in R_e
+$$
+
+并且存在
+
+$$
+v(\bold{n}) = \bold{u}.\bold{n} + w
+$$
+
+使得
+
+$$
+v(\bold{n}) - (\phi_{S_j}(\bold{q}) - \phi_{S_i}(\bold{p})) \ge 0
+$$
+
+```c
+for (int i = 1; i <= N; i++) {
+  for (int j = 2; j <= N; j++) {
+    a[i][j] = a[j][i] + a[i][j - 1]; // S1
+  }
+}
+```
+
+<!--
+定义了仿射变换，使得我们对变换后的多面体分块时，分块之间不会相互产生依赖，因此我们可以将其看作是一个原子操作。
+-->
+
+---
+
+<v-click>
+
+```c
+for (int i = 1; i <= N; i++) {
+  for (int j = 2; j <= N; j++) {
+    a[i][j] = a[j][i] + a[i][j - 1]; // S1
+  }
+}
+```
+
+```
+P: 2 <= j <= N, 1 <= i <= N
+Dependence = {S(i, j - 1) -> S(i, j): 1 <= i <= N && 2 <= j <= N;
+              S(j, i) -> S(i, j): 1 <= i <= N && 2 <= j <= N && i - j >= 1}
+```
+
+<img src="/example2-0.svg" style="height:35%" class="absolute top-25 right-10">
+
+</v-click>
+
+<v-click>
+
+我们假设仿射变换 $\phi = [c_i, c_j]\left[ \begin{array}{c} i \\ j \end{array} \right] + w$
+
+对于第一个依赖 S(i, j - 1) -> S(i, j) 有
+
+$$
+c_ii + c_jj - c_ii - c_j(j - 1) \ge 0 \Rightarrow c_j \ge 0 \\
+$$
+
+其对应的上界有
+
+$$
+w - c_j \ge 0
+$$
+
+对于第二个依赖 S(j, i) -> S(i, j) 有
+
+$$
+(c_ii + c_jj) - (c_ij + c_ji) = (c_i - c_j)i + (c_j - c_i)j \ge 0, (i, j) \in (P  \wedge i - j \ge 1)
+$$
+
+</v-click>
+
+---
+
+$$
+(c_ii + c_jj) - (c_ij + c_ji) = (c_i - c_j)i + (c_j - c_i)j \ge 0, (i, j) \in (P \wedge i - j \ge 1)
+$$
+
+Farkas 定理
+
+令 P 为由 p 个不等式确定的一个非空多面体
+$$
+a_k x + b_k \ge 0, k = 1, \dots, p
+$$
+
+对于一个仿射函数 $\Psi$ 在 P 上非负当且仅当存在一组确定多面体边界的不等式的非负线性组合使得
+
+$$
+\Psi(x) \equiv \lambda_0 + \sum_{k} \lambda_k(a_kx + b_k), \lambda \ge 0
+$$
+
+运用 Farkas 定理可有
+
+$$
+(c_i - c_j)i + (c_j - c_i)j \equiv \lambda_0 + \lambda_1 (N - i) + \lambda_2 (N - j) + \lambda_3 (i - j - 1) + \lambda_4 (i - 1) + \lambda_5 (j - 2), \lambda_i \ge 0
+$$
+
+$$
+c_i - c_j = -\lambda_1 + \lambda_3 + \lambda_4 \\
+c_j - c_i = -\lambda_2 - \lambda_3 + \lambda_5 \\
+0 = \lambda_1 + \lambda_2 \\
+0 = \lambda_0 \\
+\lambda_i \ge 0
+$$
+
+---
+
+$$
+c_i - c_j = -\lambda_1 + \lambda_3 + \lambda_4 \\
+c_j - c_i = -\lambda_2 - \lambda_3 + \lambda_5 \\
+0 = \lambda_1 + \lambda_2 \\
+0 = \lambda_0 \\
+\lambda_i \ge 0
+$$
+
+根据上述等式可得
+
+$$
+\lambda_0 = \lambda_1 = \lambda_2 = \lambda_4 = \lambda_5 = 0
+$$
+
+有 $c_i - c_j \ge 0$
+
+其对应的上界有
+
+$$
+u_1N + w - (c_ii + c_jj - c_ij - c_ji) \ge 0, (i, j) \in (P \wedge i - j \ge 1)
+$$
+
+对上式同样利用 Farkas 定理可以得出
+
+$$
+u_1 \ge 0 \\
+u_1 - c_i + c_j \ge 0 \\
+3u_1 + w - c_i + c_j \ge 0
+$$
+
+---
+
+总结一下从两个依赖中得到的约束如下
+$$
+c_j \ge 0 \\
+w - c_j \ge 0 \\
+c_i - c_j \ge 0 \\ 
+u_1 \ge 0 \\
+u_1 - c_i + c_j \ge 0 \\
+3u_1 + w - c_i + c_j \ge 0
+$$
 
 ---
 
