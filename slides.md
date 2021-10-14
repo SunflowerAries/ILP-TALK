@@ -298,11 +298,13 @@ $$
 \phi_{S_k} = [c_1 c_2 \dots c_{m_{S_k}}](\bold{i}) + c_0 \\
 $$
 
-对一个语句 $S_k$ 的多维放射变换是指
+对一个语句 $S_k$ 的多维仿射变换是指
 
 $$
 \phi_{S_k} = \left[ \begin{array}{c} c_{11} & c_{12} & \dots & c_{1 \ m_{S_k}} \\ \dots & \dots & \dots & \dots \\ c_{K1} & c_{K2} & \dots & c_{K \ m_{S_k}} \end{array} \right] (\bold{i}) + \left[ \begin{array}{c} c_{10} \\ . \\ c_{K0} \end{array} \right]
 $$
+
+需要仿射变换矩阵列满秩
 
 </v-click>
 
@@ -312,15 +314,59 @@ $$
 
 ---
 
+```c
+for (int t = 0; t < T; t += 1) {
+  for (int i = 1; i < N - 1; i += 1) {
+    A[t + 1][i] = 0.25 * (A[t][i + 1] - 2 * A[t][i] + A[t][i - 1]); // S1
+  }
+}
+```
+
+<img src="/transform-example0.svg" style="height:50%" class="absolute top-0 right-0">
+
+<v-click>
+
+<Space-20 />
+
+进行如下仿射变换
+
+$$
+\phi = \phi_{S_k} = \left[ \begin{array}{c} 1 & 0 \\ 1 & 1 \end{array} \right] \left[ \begin{array}{c} t \\ i \end{array} \right] = \left[ \begin{array}{c} t \\ t + i \end{array} \right]
+$$
+
+</v-click>
+
+<v-click>
+
+<img src="/transform-example1.svg" style="height:50%" class="absolute top-0 right-0">
+
+</v-click>
+
+---
+
 合格的仿射变换
 
 对所有依赖组成的集合 $R_e$ 满足：
 
 $$
-\phi_{S_j}(\bold{q}) - \phi_{S_i}(\bold{p}) \ge 0, \langle \bold{p}, \bold{q} \rangle \in R_e
+\phi_{S_j}(\bold{q}) - \phi_{S_i}(\bold{p}) \ge \bold{0}, \langle \bold{p}, \bold{q} \rangle \in R_e
 $$
 
-并且存在
+对于集合 $R_e$，$\bold{p} = f_e(\bold{q}), \langle \bold{p}, \bold{q} \rangle \in R_e$
+
+$$
+\delta_e(\bold{q}) = \phi_{S_j}(\bold{q}) - \phi_{S_i}(f_e(\bold{q})) \ge \bold{0}
+$$
+
+上式保证了在仿射变换后的多面体上进行分块时，分块之间的通信仅发生在分块执行前和执行后
+
+<v-click>
+
+<img src="/transform-example0.svg" style="height:45%" class="absolute top-0 right-0">
+
+</v-click>
+
+<v-click>
 
 $$
 v(\bold{n}) = \bold{u}.\bold{n} + w
@@ -329,7 +375,7 @@ $$
 使得
 
 $$
-v(\bold{n}) - (\phi_{S_j}(\bold{q}) - \phi_{S_i}(\bold{p})) \ge 0
+v(\bold{n}) - \delta_e(\bold{q}) = v(\bold{n}) - (\phi_{S_j}(\bold{q}) - \phi_{S_i}(\bold{p})) \ge \bold{0}
 $$
 
 ```c
@@ -340,13 +386,15 @@ for (int i = 1; i <= N; i++) {
 }
 ```
 
+</v-click>
+
 <!--
 定义了仿射变换，使得我们对变换后的多面体分块时，分块之间不会相互产生依赖，因此我们可以将其看作是一个原子操作。
+
+delta_e(q) 可以给出分块间通信量的一个近似估计，满足 delta_e(q) >= 0 的解有很多，需要给一个上界。
 -->
 
 ---
-
-<v-click>
 
 ```c
 for (int i = 1; i <= N; i++) {
@@ -363,8 +411,6 @@ Dependence = {S(i, j - 1) -> S(i, j): 1 <= i <= N && 2 <= j <= N;
 ```
 
 <img src="/example2-0.svg" style="height:35%" class="absolute top-25 right-10">
-
-</v-click>
 
 <v-click>
 
@@ -457,7 +503,7 @@ $$
 
 ---
 
-总结一下从两个依赖中得到的约束如下
+我们从程序的两个依赖中得到的约束如下
 $$
 c_j \ge 0 \\
 w - c_j \ge 0 \\
@@ -466,6 +512,256 @@ u_1 \ge 0 \\
 u_1 - c_i + c_j \ge 0 \\
 3u_1 + w - c_i + c_j \ge 0
 $$
+
+总结一下
+
+- 分块在考虑到内存架构的前提下充分利用程序自身的局部性与现代硬件并行能力的一种优化方式。
+
+- 但是在一些循环中因为复杂的依赖关系分块无法直接进行，需要先求出好的仿射变换，使得在放射变换后的多面体上进行分块时，分块之间的通信仅发生在分块执行前和执行后。
+
+- 我们定义好的仿射变换需要满足的条件 $\delta_e(\bold{q}) = \phi_{S_j}(\bold{q}) - \phi_{S_i}(f_e(\bold{q})) \ge \bold{0}$，依赖在仿射变换后的坐标轴上的各分量都是沿正方向的。因为 $\delta_e(\bold{q})$ 与仿射变换后分块间的通信量正相关，因此用一个上界函数 $v(\bold{n})$ 来限制 $\delta_e(\bold{q})$。
+
+要从上述不等式求出好的仿射变换，只需要求出 
+
+$$
+\text{minimize}_{\prec}\{ \bold{u}, \bold{w}, \bold{c} \}
+$$
+
+---
+
+有 $\delta_e(\bold{q}) = \phi_{S_j}(\bold{q}) - \phi_{S_i}(f_e(\bold{q})) \ge \bold{0}$， $v(\bold{n}) = \bold{u}.\bold{n} + \bold{w} \ge \delta_e(\bold{q})$ 求解如下问题
+
+$$
+\text{minimize}_{\prec}\{ \bold{u}, \bold{w}, \bold{c} \}
+$$
+
+<v-click>
+
+```c
+for (int i = 1; i <= N; i++) {
+  for (int j = 2; j <= N; j++) {
+    a[i][j] = a[j][i] + a[i][j - 1]; // S1
+  }
+}
+```
+
+针对上述程序得到如下不等式
+$$
+c_j \ge 0 \\
+w - c_j \ge 0 \\
+c_i - c_j \ge 0 \\ 
+u_1 \ge 0 \\
+u_1 - c_i + c_j \ge 0 \\
+3u_1 + w - c_i + c_j \ge 0
+$$
+
+$$
+\text{minimize}_{\prec}\{ u_1, w, c_i, c_j \}
+$$
+
+</v-click>
+
+<!--
+字典序最小问题是什么含义呢
+
+将 u 放在目标函数的最左端，因为程序中循环索引的上界往往是比较大的常数，所以首先试图最小化这些常数或符号的系数，这种方式能够保证找到最优解。试想一下如果 u = 0 ，w=0，也就是说所有的依赖在每层循环上的依赖距离分量都为 0，那么就说明这些循环嵌套中的每层循环都是可以并行的。 u 中的分量按序排列说明更侧重于外层并行，试想 u_1 = 0, u_2 \ne 0 的情况，这时第一层循环可以被并行执行，但第二层循环无法被并行执行。
+-->
+
+---
+
+$$
+c_j \ge 0 \\
+w - c_j \ge 0 \\
+c_i - c_j \ge 0 \\ 
+u_1 \ge 0 \\
+u_1 - c_i + c_j \ge 0 \\
+3u_1 + w - c_i + c_j \ge 0
+$$
+
+$$
+\text{minimize}_{\prec}\{ u_1, w, c_i, c_j \}
+$$
+
+<v-click>
+
+整数字典序最小问题
+
+$$
+\text{minimize}_{\prec} \{ x_1, x_2, \dots, x_n \} \\
+A\bold{x} \ge \bold{0}
+$$
+
+整数线性规划问题
+
+$$
+\text{minimize \ } \ \bold{c}^T\bold{x} \text{ \ s.t.} \\
+A\bold{x} \ge \bold{0}
+$$
+
+</v-click>
+
+---
+
+$$
+c_j \ge 0 \\
+w - c_j \ge 0 \\
+c_i - c_j \ge 0 \\ 
+u_1 \ge 0 \\
+u_1 - c_i + c_j \ge 0 \\
+3u_1 + w - c_i + c_j \ge 0
+$$
+
+$$
+\text{minimize}_{\prec}\{ u_1, w, c_i, c_j \}
+$$
+
+第一个解很容易得到令 $u_1 = 0$,
+
+$$
+c_i = c_j \\
+w - c_j \ge 0
+$$
+
+平凡解 (0, 0, 0, 0) 无意义，仿射变换需要列满秩，因此令 $w = 1$，得 (0, 1, 1, 1)。
+
+接下来怎么求出第二个一维仿射变换？因为列满秩，因此加入一个条件 $c_i \ne c_j$，对应两种情况 $c_i - c_j \ge 1$ 或者 $c_i - c_j \le -1$
+
+---
+
+先在原约束上添加 $c_i - c_j \ge 1$
+
+$$
+c_j \ge 0 \\
+w - c_j \ge 0 \\
+c_i - c_j \ge 0 \\ 
+u_1 \ge 0 \\
+u_1 - c_i + c_j \ge 0 \\
+3u_1 + w - c_i + c_j \ge 0 \\
+c_i - c_j \ge 1
+$$
+
+$$
+\left[ \begin{array}{c}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 0 & 0 & 1 \\
+0 & 1 & 0 & -1 \\
+0 & 0 & 1 & -1 \\
+1 & 0 & 0 & 0 \\
+1 & 0 & -1 & 1 \\
+3 & 1 & -1 & 1
+\end{array} \right] 
+\left[ \begin{array}{c} 
+u_1 \\
+w \\
+c_i \\
+c_j
+\end{array} \right] + 
+\left[ \begin{array}{c} 
+0 \\
+0 \\
+0 \\
+0 \\
+0 \\
+-1 \\
+0 \\
+0 \\
+0
+\end{array} \right] = 
+\left[ \begin{array}{c} 
+u_1 \\
+w \\
+c_i \\
+c_j \\
+z_1 \\
+z_2 \\
+z_3 \\
+z_4 \\
+z_5
+\end{array} \right]
+\ge \bold{0}
+$$
+
+---
+
+$$
+\left[ \begin{array}{cccc|c} 
+1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 \\
+0 & 1 & 0 & -1 & 0 \\
+0 & 0 & 1 & -1 & -1 \\
+1 & 0 & 0 & 0 & 0 \\
+1 & 0 & -1 & 1 & 0 \\
+3 & 1 & -1 & 1 & 0
+\end{array} \right] \Rightarrow
+
+\left[ \begin{array}{cccc|c} 
+1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 1 & 1 \\
+0 & 0 & 0 & 1 & 0 \\
+0 & 1 & 0 & -1 & 0 \\
+0 & 0 & 1 & 0 & 0 \\
+1 & 0 & 0 & 0 & 0 \\
+1 & 0 & -1 & 0 & -1 \\
+3 & 1 & -1 & 0 & -1
+\end{array} \right]
+$$
+
+<v-click>
+
+第二个解 (0, 0, 1, 0)。获得两个解 (0, 1, 1, 1) 和 (0, 0, 1, 0)。
+
+```c
+for (int i = 1; i <= N; i++) {
+  for (int j = 2; j <= N; j++) {
+    a[i][j] = a[j][i] + a[i][j - 1]; // S1
+  }
+}
+```
+
+$$
+\phi = \left[ \begin{array}{c} 1 & 1 \\ 1 & 0 \end{array} \right] \left[ \begin{array}{c} i \\ j \end{array} \right]
+$$
+
+</v-click>
+
+---
+
+```c
+for (int i = 1; i <= N; i++) {
+  for (int j = 2; j <= N; j++) {
+    a[i][j] = a[j][i] + a[i][j - 1]; // S1
+  }
+}
+```
+
+$$
+\phi = \left[ \begin{array}{c} 1 & 1 \\ 1 & 0 \end{array} \right] \left[ \begin{array}{c} i \\ j \end{array} \right] = \left[ \begin{array}{c} i + j \\ j \end{array} \right]
+$$
+
+<img src="/example2-0.svg" style="height:40%" class="absolute top-0 right-10">
+
+<v-click>
+
+<img src="/transform-example2.svg" style="height:40%" class="absolute bottom-0 right-10">
+
+</v-click>
+
+<v-click>
+
+```c
+for (int ci = 3; i <= 2 * N; ci++) {
+  for (int cj = 2; j <= ci - 1; j++) {
+    a[ci][cj] = a[ci][N + 1 - cj] + a[ci][cj - 1]; // S1
+  }
+}
+```
+
+</v-click>
 
 ---
 
