@@ -1526,3 +1526,13 @@ $$
 - Jie Zhao, Bojie Li, Wang Nie, Zhen Geng, Renwei Zhang, Xiong Gao, Bin Cheng, Chen Wu, Yun Cheng, Zheng Li, Peng Di, Kun Zhang, and Xuefeng Jin. 2021. AKG: automatic kernel generation for neural processing units using polyhedral transformations. In Proceedings of the 42nd ACM SIGPLAN International Conference on Programming Language Design and Implementation (PLDI 2021). Association for Computing Machinery, New York, NY, USA, 1233–1248. DOI:https://doi.org/10.1145/3453483.3454106
 
 - 陈天奇 深度学习编译技术的现状和未来 https://zhuanlan.zhihu.com/p/65452090
+
+- S. Chetlur, C. Woolley, P. Vandermersch, J. Cohen, J. Tran, B. Catanzaro, and E. Shelhamer. cuDNN: Efficient primitives for deep learning. arXiv preprint, 1410.0759, 2014. arxiv.org/abs/1410.0759
+
+- 【TVM 编译优化 Pytorch】
+
+  - 使用TVM编译优化Pytorch模型 https://bbs.huaweicloud.com/blogs/224847
+
+  - TVM-Pytorch模型编译体验+性能测试 https://blog.csdn.net/jiangpeng59/article/details/105516970
+
+  - Optimizing PyTorch models for fast CPU inference using Apache TVM https://spell.ml/blog/optimizing-pytorch-models-using-tvm-YI7pvREAACMAwYYz
