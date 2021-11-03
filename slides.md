@@ -204,7 +204,19 @@ Dependence = {S1(i) -> S2(i, j): 1 <= i <= 4 &&
               1 <= j <= i}
 ```
 
-<img src="/example0.png" style="height:45%" class="absolute top-40 right-60">
+<img src="/example0.png" style="height:45%" class="absolute top-40 right-20">
+
+<v-click>
+
+  <img src="/example0-blue.png" style="height:45%" class="absolute top-40 right-20">
+
+</v-click>
+
+<v-click>
+
+  <img src="/example0-red.png" style="height:45%" class="absolute top-40 right-20">
+
+</v-click>
 
 <!--
 对应多面体表示，横坐标是 j，纵坐标是 i，每一个点对应语句实例。迭代空间（domain），依赖关系
@@ -212,6 +224,8 @@ Dependence = {S1(i) -> S2(i, j): 1 <= i <= 4 &&
 那么我们现在引入多面体模型，将循环抽象成多面体，到底是想做什么呢？
 -->
 
+---
+layout: two-cols
 ---
 
 ```c
@@ -222,37 +236,35 @@ for (int i = 1; i <= m; i++) {
 }
 ```
 
-<v-click>
+<div v-click="1">
 
 ```c
-for (int k = 0; k < n / 2; k++) {
+for (int k = 0; k < n / T; k++) {
   for (int i = 1; i <= m; i++) {
-    for (int j = 1; j <= 2; j++) {
-      a[i][j] = a[i][j] + b[2 * k + j]; // S1
+    for (int j = 1; j <= T; j++) {
+      a[i][T * k + j] = a[i][T * k + j] + b[T * k + j];
     }
   }
 }
 ```
 
-</v-click>
+</div>
 
-<v-click>
+<div v-click="2">
 
 ```c
-parfor (int k = 0; k < n / 2; k++) {
+parfor (int k = 0; k < n / T; k++) {
   for (int i = 1; i <= m; i++) {
-    for (int j = 1; j <= 2; j++) {
-      a[i][j] = a[i][j] + b[2 * k + j]; // S1
+    for (int j = 1; j <= T; j++) {
+      a[i][T * k + j] = a[i][T * k + j] + b[T * k + j];
     }
   }
 }
 ```
 
-</v-click>
+</div>
 
-<img src="/example1.png" style="height:45%" class="absolute top-10 right-50">
-
-<v-click>
+<div v-click="3">
 
 ```c
 for (int i = 1; i <= N; i++) {
@@ -262,10 +274,40 @@ for (int i = 1; i <= N; i++) {
 }
 ```
 
-<img src="/example2-0.svg" style="height:45%" class="absolute bottom-0 right-50">
+<img src="/example2-0.png" style="height:50%" class="absolute bottom-0 right-10">
 
 
-</v-click>
+</div>
+
+::right::
+
+```
+i=1:B[1],B[2],B[3]...B[n]
+i=2:B[1],B[2],B[3]...B[n]
+i=3:B[1],B[2],B[3]...B[n]
+...
+i=m:B[1],B[2],B[3]...B[n]
+```
+
+<div v-click="1">
+
+```
+i=1:B[1],B[2],B[3]...B[T]
+...
+i=m:B[1],B[2],B[3]...B[T]
+
+i=1:B[T+1],B[T+2],B[T+3]...B[2T]
+...
+i=m:B[T+1],B[T+2],B[T+3]...B[2T]
+```
+
+</div>
+
+<div v-click="4">
+
+<img src="/example2-0-tiled.png" style="height:50%" class="absolute bottom-0 right-10">
+
+</div>
 
 <!--
 我们想做的是循环分块。分块的目的是为了利用程序的局部性以及现有硬件的并行能力。
@@ -288,7 +330,7 @@ for (int i = 1; i <= N; i++) {
 }
 ```
 
-<img src="/example2-0.svg" style="height:35%" class="absolute top-25 right-10">
+<img src="/example2-0.png" style="height:35%" class="absolute top-25 right-10">
 
 <v-click>
 
@@ -322,7 +364,13 @@ for (int t = 0; t < T; t += 1) {
 }
 ```
 
-<img src="/transform-example0.svg" style="height:50%" class="absolute top-0 right-0">
+<img src="/transform-example0.png" style="height:50%" class="absolute top-0 right-0">
+
+<v-click>
+
+<img src="/transform-example0-tiled.png" style="height:50%" class="absolute top-0 right-0">
+
+</v-click>
 
 <v-click>
 
@@ -338,7 +386,19 @@ $$
 
 <v-click>
 
-<img src="/transform-example1.svg" style="height:50%" class="absolute top-0 right-0">
+<img src="/transformed-example.png" style="height:50%" class="absolute top-73 left-0">
+
+</v-click>
+
+<v-click>
+
+<img src="/transformed-example-tiled.png" style="height:50%" class="absolute top-73 left-0">
+
+</v-click>
+
+<v-click>
+
+<img src="/transform-example-tiled.png" style="height:50%" class="absolute top-73 right-0">
 
 </v-click>
 
@@ -362,7 +422,7 @@ $$
 
 <v-click>
 
-<img src="/transform-example0.svg" style="height:45%" class="absolute top-0 right-0">
+<img src="/transform-example0.png" style="height:45%" class="absolute top-0 right-0">
 
 </v-click>
 
@@ -410,7 +470,7 @@ Dependence = {S(i, j - 1) -> S(i, j): 1 <= i <= N && 2 <= j <= N;
               S(j, i) -> S(i, j): 1 <= i <= N && 2 <= j <= N && i - j >= 1}
 ```
 
-<img src="/example2-0.svg" style="height:35%" class="absolute top-25 right-10">
+<img src="/example2-0.png" style="height:35%" class="absolute top-25 right-10">
 
 <v-click>
 
@@ -708,12 +768,24 @@ $$
 1 & 0 & 0 & 0 & 0 \\
 1 & 0 & -1 & 0 & -1 \\
 3 & 1 & -1 & 0 & -1
+\end{array} \right] \Rightarrow
+
+\left[ \begin{array}{cccc|c} 
+1 & 0 & 1 & 0 & 1 \\
+0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 1 & 1 \\
+0 & 0 & 0 & 1 & 0 \\
+0 & 1 & 0 & -1 & 0 \\
+0 & 0 & 1 & 0 & 0 \\
+1 & 0 & 1 & 0 & 1 \\
+1 & 0 & 0 & 0 & 0 \\
+3 & 1 & 2 & 0 & 2
 \end{array} \right]
 $$
 
 <v-click>
 
-第二个解 (0, 0, 1, 0)。获得两个解 (0, 1, 1, 1) 和 (0, 0, 1, 0)。
+第二个解 (0, 0, 1, 0)。获得两个解 (0, 1, 1, 1) 和 (1, 0, 1, 0)。
 
 ```c
 for (int i = 1; i <= N; i++) {
@@ -740,26 +812,26 @@ for (int i = 1; i <= N; i++) {
 ```
 
 $$
-\phi = \left[ \begin{array}{c} 1 & 1 \\ 1 & 0 \end{array} \right] \left[ \begin{array}{c} i \\ j \end{array} \right] = \left[ \begin{array}{c} i + j \\ j \end{array} \right]
+\phi = \left[ \begin{array}{c} 1 & 1 \\ 1 & 0 \end{array} \right] \left[ \begin{array}{c} i \\ j \end{array} \right] = \left[ \begin{array}{c} i + j \\ i \end{array} \right] = \left[ \begin{array}{c} c_1 \\ c_2 \end{array} \right]
 $$
 
-<img src="/example2-0.svg" style="height:40%" class="absolute top-0 right-10">
+<img src="/example2-0.png" style="height:40%" class="absolute top-0 right-10">
 
 <v-click>
 
-<img src="/transform-example2.svg" style="height:40%" class="absolute bottom-0 right-10">
+```c
+for (int c2 = 1; c2 <= N; c2++) {
+  for (int c1 = c2 + 1; c1 <= c2 + N; c1++) {
+    a[c2][c1 - c2] = a[c1 - c2][c2] + a[c2][c1 - c2 - 1]; // S1
+  }
+}
+```
 
 </v-click>
 
 <v-click>
 
-```c
-for (int ci = 3; i <= 2 * N; ci++) {
-  for (int cj = 2; j <= ci - 1; j++) {
-    a[ci][cj] = a[ci][N + 1 - cj] + a[ci][cj - 1]; // S1
-  }
-}
-```
+<img src="/transformed-example2-0.png" style="height:60%" class="absolute bottom-0 right-0">
 
 </v-click>
 
@@ -1536,3 +1608,17 @@ $$
   - TVM-Pytorch模型编译体验+性能测试 https://blog.csdn.net/jiangpeng59/article/details/105516970
 
   - Optimizing PyTorch models for fast CPU inference using Apache TVM https://spell.ml/blog/optimizing-pytorch-models-using-tvm-YI7pvREAACMAwYYz
+
+---
+
+# 参考文献
+
+- 陈清扬 循环优化：
+
+  - 循环优化之循环分块（loop tiling） https://zhuanlan.zhihu.com/p/292539074
+
+  - 循环优化之循环分块（loop tiling）二 https://zhuanlan.zhihu.com/p/301905385
+
+  - 循环优化之循环合并（loop fusion） https://zhuanlan.zhihu.com/p/315041435
+
+  - 循环优化之向量化并行（vectorization） https://zhuanlan.zhihu.com/p/337756824
