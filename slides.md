@@ -456,6 +456,21 @@ delta_e(q) 可以给出分块间通信量的一个近似估计，满足 delta_e(
 
 ---
 
+$$
+v(\bold{n}) = \bold{u}.\bold{n} + w
+$$
+
+使得
+
+$$
+v(\bold{n}) - \delta_e(\bold{q}) = v(\bold{n}) - (\phi_{S_j}(\bold{q}) - \phi_{S_i}(\bold{p})) \ge \bold{0}
+$$
+
+<img src="/bound.png" style="height:65%" class="absolute bottom-10 left-50">
+<img src="/bound.png" style="height:65%" class="absolute bottom-10 left-50">
+
+---
+
 ```c
 for (int i = 1; i <= N; i++) {
   for (int j = 2; j <= N; j++) {
