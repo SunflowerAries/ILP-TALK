@@ -21,7 +21,7 @@ drawings:
   persist: false
 ---
 
-# 整数线性规划问题（ILP）及其在深度学习编译器中的运用
+# 多面体模型及其在深度学习编译器中的运用
 
 汇报人： 罗翔 指导老师： 尚笠教授
 
@@ -184,7 +184,7 @@ balabala 重复一遍，我们以 TVM 为例大致梳理了一下深度学习编
 
 <br>
 
-## 多面体模型（Polyhedral method）
+## 多面体模型（Polyhedral method）：Pluto
 
 多面体编译技术是指在循环边界约束条件下将语句实例表示成空间多面体,并通过这些多面体上的几何操作来分析和优化程序的编译技术
 
@@ -849,6 +849,22 @@ for (int c2 = 1; c2 <= N; c2++) {
 <img src="/transformed-example2-0.png" style="height:60%" class="absolute bottom-0 right-0">
 
 </v-click>
+
+---
+
+整数字典序最小问题
+
+$$
+\text{minimize}_{\prec} \{ x_1, x_2, \dots, x_n \} \\
+A\bold{x} \ge \bold{0}
+$$
+
+整数线性规划问题
+
+$$
+\text{minimize \ } \ \bold{c}^T\bold{x} \text{ \ s.t.} \\
+A\bold{x} \ge \bold{0}
+$$
 
 ---
 
