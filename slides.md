@@ -1653,3 +1653,11 @@ $$
   - 循环优化之循环合并（loop fusion） https://zhuanlan.zhihu.com/p/315041435
 
   - 循环优化之向量化并行（vectorization） https://zhuanlan.zhihu.com/p/337756824
+
+- 优化入门（Simplex、Gomory Cut）
+
+  - https://www.cs.ccu.edu.tw/~wtchu/courses/2015s_OPT/Lectures/Chapter%2016%20Simplex%20Method.pdf
+
+  - https://www.cs.ccu.edu.tw/~wtchu/courses/2015s_OPT/Lectures/Chapter%2019%20Integer%20Linear%20Programming.pdf
+
+- 【Pluto 求解调度过程】 https://www.ece.lsu.edu/jxr/Publications-pdf/tr70-07.pdf
